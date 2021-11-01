@@ -1,0 +1,19 @@
+{
+  "name": "Chrome Tab Extension",
+  "version": "1.0.0",
+  "manifest_version": 2,
+  "description": "Chromeのタブと同じ感覚で使用可能なブックマーク",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "browser_action": {
+    "default_icon": "icons/icon19.png",
+    "default_popup": "dist/index.html"
+  }
+}
