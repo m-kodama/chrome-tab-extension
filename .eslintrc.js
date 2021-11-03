@@ -1,7 +1,8 @@
+/* eslint-disable no-undef */
 module.exports = {
   root: true,
   env: {
-    webextensions: true
+    webextensions: true,
   },
   extends: [
     "plugin:vue/essential",
