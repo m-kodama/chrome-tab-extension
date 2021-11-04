@@ -1,28 +1,19 @@
 <template>
   <div id="app">
-    <HelloWorld msg="elcome to Your Vue.js + TypeScript App" />
+    <div>elcome to Your Vue.js + TypeScript App</div>
   </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import HelloWorld from './components/HelloWorld.vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'App',
-  components: {
-    HelloWorld,
-  },
 });
 </script>
 
 <style lang="scss">
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  min-height: 36px;
 }
 </style>
