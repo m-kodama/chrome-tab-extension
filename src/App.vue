@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div @keydown.meta.exact="undo" @keydown.meta.shift.exact="redo">
     <div>elcome to Your Vue.js + TypeScript App</div>
   </div>
 </template>
@@ -9,6 +9,31 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
   name: 'App',
+  setup() {
+    const undo = (event: Event) => {
+      if (!(event instanceof KeyboardEvent)) {
+        return;
+      }
+      if (event.key !== 'z') {
+        return;
+      }
+      console.log('undo');
+    };
+    const redo = (event: Event) => {
+      if (!(event instanceof KeyboardEvent)) {
+        return;
+      }
+      if (event.key !== 'z') {
+        return;
+      }
+      console.log('redo');
+    };
+
+    return {
+      undo,
+      redo,
+    };
+  },
 });
 </script>
 
