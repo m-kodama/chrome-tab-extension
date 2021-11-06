@@ -50,6 +50,14 @@ body {
     'ヒラギノ角ゴ Pro W3', 'Hiragino Kaku Gothic Pro', 'メイリオ', 'Meiryo',
     '游ゴシック', 'Yu Gothic', 'ＭＳ Ｐゴシック', sans-serif;
 }
+button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  appearance: none;
+}
 #app {
   min-height: 36px;
 }
