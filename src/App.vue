@@ -39,6 +39,15 @@ export default defineComponent({
 
 <style lang="scss">
 $surface-color: #121212;
+$surface-overlay-1dp: rgba(255, 255, 255, 0.05);
+$surface-overlay-2dp: rgba(255, 255, 255, 0.07);
+$surface-overlay-3dp: rgba(255, 255, 255, 0.08);
+$surface-overlay-4dp: rgba(255, 255, 255, 0.09);
+$surface-overlay-6dp: rgba(255, 255, 255, 0.11);
+$surface-overlay-7dp: rgba(255, 255, 255, 0.12);
+$surface-overlay-12dp: rgba(255, 255, 255, 0.14);
+$surface-overlay-16dp: rgba(255, 255, 255, 0.15);
+$surface-overlay-24dp: rgba(255, 255, 255, 0.16);
 $text-color: #ffffff;
 body {
   width: 800px;
