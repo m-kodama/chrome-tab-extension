@@ -16,16 +16,16 @@ import Icon, { IconName } from '@/components/icons/Icon.vue';
 
 const buttonSize = {
   small: {
+    icon: 16,
+    button: 20,
+  },
+  medium: {
     icon: 20,
     button: 24,
   },
-  medium: {
+  large: {
     icon: 24,
     button: 28,
-  },
-  large: {
-    icon: 28,
-    button: 32,
   },
 };
 
@@ -76,24 +76,12 @@ export default defineComponent({
   justify-content: center;
   align-items: center;
   position: relative;
-}
-.icon-button::before {
-  width: 100%;
-  height: 100%;
   border-radius: 50%;
-  display: block;
-  content: '';
-  position: absolute;
-  left: 0px;
-  top: 0px;
-  z-index: -1;
-  background-color: rgba(255, 255, 255, 0.24);
-  opacity: 0;
-  transition: opacity 80ms;
-  pointer-events: none;
+  background-color: rgba(255, 255, 255, 0);
+  transition: background 80ms;
 }
-.icon-button:hover::before,
-.icon-button:focus::before {
-  opacity: 1;
+.icon-button:hover,
+.icon-button:focus {
+  background-color: rgba(255, 255, 255, 0.24);
 }
 </style>
