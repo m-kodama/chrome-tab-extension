@@ -87,7 +87,6 @@ $text-sub-color: rgba(255, 255, 255, 0.72);
 }
 body {
   width: 800px;
-  height: 600px;
   margin: 0;
   background-color: $surface-color;
   color: $text-color;
