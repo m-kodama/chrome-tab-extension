@@ -1,14 +1,46 @@
 <template>
-  <div @keydown.meta.exact="undo" @keydown.meta.shift.exact="redo">
-    <div>elcome to Your Vue.js + TypeScript App</div>
+  <div
+    class="container"
+    @keydown.meta.exact="undo"
+    @keydown.meta.shift.exact="redo"
+  >
+    <div class="tab-groups">
+      <div v-for="i of [1, 2, 3, 4]" class="tab-group" :key="i">
+        <div class="tab-group-content">
+          <icon-button class="tab-add" iconName="add"></icon-button>
+          <div class="tabs">
+            <div v-for="j of [1, 2, 3, 4, 5, 6]" class="tab" :key="j">
+              <div class="tab-favicon"></div>
+              <div class="tab-title">Tabタイトルタイトル</div>
+              <icon-button
+                class="tab-close"
+                iconName="clear"
+                size="small"
+              ></icon-button>
+            </div>
+          </div>
+        </div>
+        <div class="tab-bottom-bar"></div>
+      </div>
+      <button>
+        <icon name="add"></icon>
+        Add Group
+      </button>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import Icon from '@/components/icons/Icon.vue';
+import IconButton from '@/components/buttons/IconButton.vue';
 
 export default defineComponent({
   name: 'App',
+  components: {
+    Icon,
+    IconButton,
+  },
   setup() {
     const undo = (event: Event) => {
       if (!(event instanceof KeyboardEvent)) {
@@ -49,15 +81,21 @@ $surface-overlay-12dp: rgba(255, 255, 255, 0.14);
 $surface-overlay-16dp: rgba(255, 255, 255, 0.15);
 $surface-overlay-24dp: rgba(255, 255, 255, 0.16);
 $text-color: #ffffff;
+$text-sub-color: rgba(255, 255, 255, 0.72);
+* {
+  box-sizing: border-box;
+}
 body {
   width: 800px;
   height: 600px;
   margin: 0;
   background-color: $surface-color;
   color: $text-color;
-  font-family: 'Avenir', 'Helvetica Neue', 'Helvetica', 'Arial',
-    'ヒラギノ角ゴ Pro W3', 'Hiragino Kaku Gothic Pro', 'メイリオ', 'Meiryo',
-    '游ゴシック', 'Yu Gothic', 'ＭＳ Ｐゴシック', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Helvetica Neue, Helvetica, Arial, sans-serif, Apple Color Emoji,
+    Segoe UI Emoji, Segoe UI Symbol, Avenir, 'ヒラギノ角ゴ Pro W3',
+    'Hiragino Kaku Gothic Pro', 'メイリオ', 'Meiryo', '游ゴシック', 'Yu Gothic',
+    'ＭＳ Ｐゴシック', sans-serif;
 }
 button {
   background-color: transparent;
@@ -69,5 +107,77 @@ button {
 }
 #app {
   min-height: 36px;
+}
+.container {
+  background-color: $surface-overlay-2dp;
+}
+.tab-groups {
+  font-size: 12px;
+}
+.tab-group {
+  padding-top: 8px;
+  width: 100%;
+}
+.tab-group-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 36px;
+  padding: 0px 4px 0px 8px;
+}
+.tabs {
+  display: flex;
+  flex: 1 0 0;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  overflow: hidden;
+}
+.tab {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 8px;
+  overflow: hidden;
+}
+.tab-favicon {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  background-size: 16px;
+  background-image: url('https://www.google.com/s2/favicons?domain=google.co.jp');
+  margin-left: 4px;
+}
+.tab-title {
+  flex: 1;
+  color: $text-sub-color;
+  margin-left: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    #000 0%,
+    #000 calc(100% - 24px),
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    #000 0%,
+    #000 calc(100% - 24px),
+    transparent
+  );
+}
+.tab-close {
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin-left: -4px;
+}
+.tab-bottom-bar {
+  width: 100%;
+  height: 4px;
+  background-color: $surface-overlay-16dp;
 }
 </style>
