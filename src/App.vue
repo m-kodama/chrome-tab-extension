@@ -7,6 +7,9 @@
     <div class="tab-groups">
       <div v-for="i of [1, 2, 3, 4]" class="tab-group" :key="i">
         <div class="tab-group-content">
+          <div v-if="i !== 1" class="tab-group-tag">
+            <div class="tab-group-tag-title">Flutter{{ i }}</div>
+          </div>
           <icon-button class="tab-add" iconName="add"></icon-button>
           <div class="tabs">
             <div v-for="j of [1, 2, 3, 4, 5, 6]" class="tab" :key="j">
@@ -113,6 +116,34 @@ button {
 .tab-groups {
   font-size: 12px;
   user-select: none;
+.tab-group-tag {
+  max-width: 80px;
+  color: $surface-color;
+  background-color: #8ab4f5;
+  border-radius: 6px;
+  padding: 4px 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+.tab-group-tag-title {
+  width: 100%;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    #fff 0%,
+    #fff calc(80px - 24px),
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    #fff 0%,
+    #fff calc(80px - 24px),
+    transparent
+  );
+}
+.tab-add {
+  margin-left: 4px;
 }
 .tab-group {
   padding-top: 8px;
