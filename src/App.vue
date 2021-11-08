@@ -112,6 +112,7 @@ button {
 }
 .tab-groups {
   font-size: 12px;
+  user-select: none;
 }
 .tab-group {
   padding-top: 8px;
