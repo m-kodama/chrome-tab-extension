@@ -25,8 +25,8 @@
         </div>
         <div class="tab-bottom-bar"></div>
       </div>
-      <button>
-        <icon name="add"></icon>
+      <button class="add-group-button">
+        <icon name="add" iconColor="rgba(255, 255, 255, 0.72)"></icon>
         Add Group
       </button>
     </div>
@@ -116,6 +116,8 @@ button {
 .tab-groups {
   font-size: 12px;
   user-select: none;
+  padding-bottom: 4px;
+}
 .tab-group-tag {
   max-width: 80px;
   color: $surface-color;
@@ -210,5 +212,22 @@ button {
   width: 100%;
   height: 4px;
   background-color: $surface-overlay-16dp;
+}
+.add-group-button {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 8px 4px 2px;
+  margin: 4px 0 0 6px;
+  color: $text-sub-color;
+  gap: 4px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0);
+  transition: background 80ms;
+}
+.add-group-button:hover,
+.add-group-button:focus {
+  background-color: rgba(255, 255, 255, 0.24);
 }
 </style>
