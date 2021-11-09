@@ -26,7 +26,11 @@
         <div class="tab-bottom-bar"></div>
       </div>
       <button class="add-group-button">
-        <icon name="add" iconColor="rgba(255, 255, 255, 0.72)"></icon>
+        <icon
+          name="addCircleOutline"
+          iconColor="rgba(255, 255, 255, 0.72)"
+          :size="20"
+        ></icon>
         Add Group
       </button>
     </div>
