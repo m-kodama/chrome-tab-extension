@@ -10,5 +10,14 @@ export interface TabGroup {
   color: TabGroupColor;
 }
 
-const tabGroupColors = ['#8ab4f5'] as const;
+const tabGroupColors = [
+  '#BDC1C5',
+  '#8ab4f5',
+  '#F28B83',
+  '#FED56B',
+  '#80C998',
+  '#FF8BC8',
+  '#BE9BDC',
+  '#77D9EB',
+] as const;
 type TabGroupColor = typeof tabGroupColors[number];
