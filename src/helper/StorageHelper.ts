@@ -3,8 +3,11 @@
 export type StorageType = 'local' | 'sync';
 
 class StorageHelper {
-  async load<T>(key: string, storageType: StorageType = 'local'): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
+  async load<T>(
+    key: string,
+    storageType: StorageType = 'local',
+  ): Promise<T | undefined> {
+    return new Promise<T | undefined>((resolve, reject) => {
       chrome.storage[storageType].get([key], (result: { [key: string]: T }) => {
         if (chrome.runtime.lastError) {
           return reject(chrome.runtime.lastError);
@@ -30,4 +33,4 @@ class StorageHelper {
   }
 }
 
-export default StorageHelper;
+export default new StorageHelper();

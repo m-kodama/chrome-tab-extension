@@ -5,16 +5,54 @@
     @keydown.meta.shift.exact="redo"
   >
     <div class="tab-groups">
-      <div v-for="i of [1, 2, 3, 4]" class="tab-group" :key="i">
+      <!-- 1列目 -->
+      <div class="tab-group">
         <div class="tab-group-content">
-          <div v-if="i !== 1" class="tab-group-tag">
-            <div class="tab-group-tag-title">Flutter{{ i }}</div>
+          <icon-button class="tab-add" iconName="add"></icon-button>
+          <div class="tabs">
+            <div v-for="tab of tabs" class="tab" :key="tab.url">
+              <div
+                class="tab-favicon"
+                :style="{
+                  backgroundImage: `url('https://www.google.com/s2/favicons?domain=${tab.domain}')`,
+                }"
+              ></div>
+              <div class="tab-title">{{ tab.title }}</div>
+              <icon-button
+                class="tab-close"
+                iconName="clear"
+                size="small"
+              ></icon-button>
+            </div>
+          </div>
+        </div>
+        <div class="tab-bottom-bar"></div>
+      </div>
+      <!-- タブグループ -->
+      <div
+        v-for="tabGroup of tabGroups"
+        class="tab-group"
+        :key="tabGroup.groupName"
+      >
+        <div class="tab-group-content">
+          <div
+            class="tab-group-tag"
+            :style="{
+              backgroundColor: tabGroup.color,
+            }"
+          >
+            <div class="tab-group-tag-title">{{ tabGroup.groupName }}</div>
           </div>
           <icon-button class="tab-add" iconName="add"></icon-button>
           <div class="tabs">
-            <div v-for="j of [1, 2, 3, 4, 5, 6]" class="tab" :key="j">
-              <div class="tab-favicon"></div>
-              <div class="tab-title">Tabタイトルタイトル</div>
+            <div v-for="tab of tabGroup.tabs" class="tab" :key="tab.url">
+              <div
+                class="tab-favicon"
+                :style="{
+                  backgroundImage: `url('https://www.google.com/s2/favicons?domain=${tab.domain}')`,
+                }"
+              ></div>
+              <div class="tab-title">{{ tab.title }}</div>
               <icon-button
                 class="tab-close"
                 iconName="clear"
@@ -38,9 +76,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, onMounted, ref } from 'vue';
 import Icon from '@/components/icons/Icon.vue';
 import IconButton from '@/components/buttons/IconButton.vue';
+import TabRepository from './repositories/TabRepository';
+import { Tab, TabGroup } from './model/Tab';
 
 export default defineComponent({
   name: 'App',
@@ -68,9 +108,21 @@ export default defineComponent({
       console.log('redo');
     };
 
+    const tabs = ref<Tab[]>([]);
+    const tabGroups = ref<TabGroup[]>([]);
+    const getTabStorage = async () => {
+      const tabStorage = await TabRepository.fetch();
+      tabs.value = tabStorage?.tabs ?? [];
+      tabGroups.value = tabStorage?.tabGroups ?? [];
+    };
+    onMounted(getTabStorage);
+
     return {
       undo,
       redo,
+      tabs,
+      tabGroups,
+      getTabStorage,
     };
   },
 });
@@ -125,7 +177,6 @@ button {
 .tab-group-tag {
   max-width: 80px;
   color: $surface-color;
-  background-color: #8ab4f5;
   border-radius: 6px;
   padding: 4px 6px;
   display: flex;
@@ -185,7 +236,6 @@ button {
   width: 16px;
   height: 16px;
   background-size: 16px;
-  background-image: url('https://www.google.com/s2/favicons?domain=google.co.jp');
   margin-left: 4px;
 }
 .tab-title {
