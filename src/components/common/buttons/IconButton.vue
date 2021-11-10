@@ -12,7 +12,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, PropType } from 'vue';
-import Icon, { IconName } from '@/components/icons/Icon.vue';
+import Icon, { IconName } from '@/components/common/icons/Icon.vue';
 
 const buttonSize = {
   small: {

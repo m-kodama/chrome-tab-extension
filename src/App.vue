@@ -77,8 +77,8 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from 'vue';
-import Icon from '@/components/icons/Icon.vue';
-import IconButton from '@/components/buttons/IconButton.vue';
+import Icon from '@/components/common/icons/Icon.vue';
+import IconButton from '@/components/common/buttons/IconButton.vue';
 import TabRepository from './repositories/TabRepository';
 import { Tab, TabGroup } from './model/Tab';
 
