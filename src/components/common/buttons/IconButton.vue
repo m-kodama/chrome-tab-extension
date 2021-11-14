@@ -1,7 +1,7 @@
 <template>
   <button
     class="icon-button"
-    @click="$emit('ckick')"
+    @click="$emit('click')"
     type="button"
     :autofocus="autofocus"
     :style="style"
