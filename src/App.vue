@@ -8,13 +8,17 @@
       <!-- 1列目 -->
       <div class="tab-group">
         <div class="tab-group-content">
-          <icon-button class="tab-add" iconName="add"></icon-button>
+          <icon-button
+            class="tab-add"
+            iconName="add"
+            @click="addTab"
+          ></icon-button>
           <div class="tabs">
             <div v-for="tab of tabs" class="tab" :key="tab.url">
               <div
                 class="tab-favicon"
                 :style="{
-                  backgroundImage: `url('https://www.google.com/s2/favicons?domain=${tab.domain}')`,
+                  backgroundImage: `url('${tab.favIconUrl}')`,
                 }"
               ></div>
               <div class="tab-title">{{ tab.title }}</div>
@@ -22,6 +26,7 @@
                 class="tab-close"
                 iconName="clear"
                 size="small"
+                @click="removeTab(tab.url)"
               ></icon-button>
             </div>
           </div>
@@ -49,7 +54,7 @@
               <div
                 class="tab-favicon"
                 :style="{
-                  backgroundImage: `url('https://www.google.com/s2/favicons?domain=${tab.domain}')`,
+                  backgroundImage: `url('${tab.favIconUrl}')`,
                 }"
               ></div>
               <div class="tab-title">{{ tab.title }}</div>
@@ -81,6 +86,7 @@ import Icon from '@/components/common/icons/Icon.vue';
 import IconButton from '@/components/common/buttons/IconButton.vue';
 import TabRepository from './repositories/TabRepository';
 import { Tab, TabGroup } from './model/Tab';
+import TabsHelper from './helper/TabsHelper';
 
 export default defineComponent({
   name: 'App',
@@ -117,12 +123,43 @@ export default defineComponent({
     };
     onMounted(getTabStorage);
 
+    const addTab = async () => {
+      const currentTab = await TabsHelper.getCurrentTab();
+      console.log(currentTab);
+      const { url } = currentTab;
+      if (url === undefined) {
+        return;
+      }
+      if (tabs.value.some((tab) => tab.url === url)) {
+        console.log('url is already saved');
+        return;
+      }
+      tabs.value.push({
+        url: url,
+        title: currentTab.title ?? '',
+        favIconUrl: currentTab.favIconUrl ?? '',
+      });
+      await TabRepository.save({
+        tabs: tabs.value,
+        tabGroups: tabGroups.value,
+      });
+    };
+
+    const removeTab = async (url: string) => {
+      tabs.value = tabs.value.filter((tab) => tab.url !== url);
+      await TabRepository.save({
+        tabs: tabs.value,
+        tabGroups: tabGroups.value,
+      });
+    };
+
     return {
       undo,
       redo,
       tabs,
       tabGroups,
-      getTabStorage,
+      addTab,
+      removeTab,
     };
   },
 });

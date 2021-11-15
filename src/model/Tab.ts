@@ -1,7 +1,7 @@
 export interface Tab {
-  domain: string;
   url: string;
   title: string;
+  favIconUrl: string;
 }
 
 export interface TabGroup {
