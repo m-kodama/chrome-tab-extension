@@ -8,7 +8,7 @@ class StorageHelper {
     storageType: StorageType = 'local',
   ): Promise<T | undefined> {
     return new Promise<T | undefined>((resolve, reject) => {
-      chrome.storage[storageType].get([key], (result: { [key: string]: T }) => {
+      chrome.storage[storageType].get(key, (result: { [key: string]: T }) => {
         if (chrome.runtime.lastError) {
           return reject(chrome.runtime.lastError);
         }

@@ -140,16 +140,16 @@ export default defineComponent({
         favIconUrl: currentTab.favIconUrl ?? '',
       });
       await TabRepository.save({
-        tabs: tabs.value,
-        tabGroups: tabGroups.value,
+        tabs: tabs.value.map((e) => e),
+        tabGroups: tabGroups.value.map((e) => e),
       });
     };
 
     const removeTab = async (url: string) => {
       tabs.value = tabs.value.filter((tab) => tab.url !== url);
       await TabRepository.save({
-        tabs: tabs.value,
-        tabGroups: tabGroups.value,
+        tabs: tabs.value.map((e) => e),
+        tabGroups: tabGroups.value.map((e) => e),
       });
     };
 
