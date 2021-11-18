@@ -268,6 +268,7 @@ button {
   align-items: center;
   padding: 8px;
   overflow: hidden;
+  cursor: pointer;
 }
 .tab-favicon {
   flex-grow: 0;
