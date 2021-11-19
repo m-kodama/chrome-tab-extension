@@ -166,16 +166,16 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-$surface-color: #121212;
-$surface-overlay-1dp: rgba(255, 255, 255, 0.05);
-$surface-overlay-2dp: rgba(255, 255, 255, 0.07);
-$surface-overlay-3dp: rgba(255, 255, 255, 0.08);
-$surface-overlay-4dp: rgba(255, 255, 255, 0.09);
-$surface-overlay-6dp: rgba(255, 255, 255, 0.11);
-$surface-overlay-7dp: rgba(255, 255, 255, 0.12);
-$surface-overlay-12dp: rgba(255, 255, 255, 0.14);
-$surface-overlay-16dp: rgba(255, 255, 255, 0.15);
-$surface-overlay-24dp: rgba(255, 255, 255, 0.16);
+$elevation-0dp: #121212;
+$elevation-1dp: #1e1e1e;
+$elevation-2dp: #222222;
+$elevation-3dp: #242424;
+$elevation-4dp: #272727;
+$elevation-6dp: #2c2c2c;
+$elevation-7dp: #2e2e2e;
+$elevation-12dp: #333333;
+$elevation-16dp: #363636;
+$elevation-24dp: #383838;
 $text-color: #ffffff;
 $text-sub-color: rgba(255, 255, 255, 0.72);
 * {
@@ -184,7 +184,7 @@ $text-sub-color: rgba(255, 255, 255, 0.72);
 body {
   width: 800px;
   margin: 0;
-  background-color: $surface-color;
+  background-color: $elevation-0dp;
   color: $text-color;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     Helvetica Neue, Helvetica, Arial, sans-serif, Apple Color Emoji,
@@ -204,7 +204,7 @@ button {
   min-height: 36px;
 }
 .container {
-  background-color: $surface-overlay-2dp;
+  background-color: $elevation-2dp;
 }
 .tab-groups {
   font-size: 12px;
@@ -213,7 +213,7 @@ button {
 }
 .tab-group-tag {
   max-width: 80px;
-  color: $surface-color;
+  color: $elevation-0dp;
   border-radius: 6px;
   padding: 4px 6px;
   display: flex;
@@ -269,6 +269,10 @@ button {
   padding: 8px;
   overflow: hidden;
   cursor: pointer;
+  border-radius: 8px 8px 0 0;
+}
+.tab:hover {
+  background-color: $elevation-6dp;
 }
 .tab-favicon {
   flex-grow: 0;
@@ -305,7 +309,7 @@ button {
 .tab-bottom-bar {
   width: 100%;
   height: 4px;
-  background-color: $surface-overlay-16dp;
+  background-color: $elevation-16dp;
 }
 .add-group-button {
   display: flex;
