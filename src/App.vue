@@ -14,7 +14,12 @@
             @click="addTab"
           ></icon-button>
           <div class="tabs">
-            <div v-for="tab of tabs" class="tab" :key="tab.url">
+            <div
+              v-for="tab of tabs"
+              class="tab"
+              :key="tab.url"
+              @click="onTabClick(tab)"
+            >
               <div
                 class="tab-favicon"
                 :style="{
@@ -153,6 +158,16 @@ export default defineComponent({
       });
     };
 
+    const onTabClick = async (tab: Tab) => {
+      // 現在のwindowでそのタブを開いている場合はそのタブを表示する
+      const tabs = await TabsHelper.findByUrl(tab.url);
+      if (tabs.length !== 0) {
+        await TabsHelper.toActive(tabs[0].index);
+        return;
+      }
+      await TabsHelper.create(tab.url, false);
+    };
+
     return {
       undo,
       redo,
@@ -160,6 +175,7 @@ export default defineComponent({
       tabGroups,
       addTab,
       removeTab,
+      onTabClick,
     };
   },
 });
