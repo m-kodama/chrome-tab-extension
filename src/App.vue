@@ -18,7 +18,8 @@
               v-for="tab of tabs"
               class="tab"
               :key="tab.url"
-              @click.self="onTabClick(tab)"
+              @click.exact="onTabClick(tab)"
+              @click.meta="onTabMetaClick(tab)"
             >
               <div
                 class="tab-favicon"
@@ -31,7 +32,7 @@
                 class="tab-close"
                 iconName="clear"
                 size="small"
-                @click="removeTab(tab.url)"
+                @click.native.stop="removeTab(tab.url)"
               ></icon-button>
             </div>
           </div>
@@ -165,6 +166,10 @@ export default defineComponent({
         await TabsHelper.toActive(tabs[0].index);
         return;
       }
+      await TabsHelper.create(tab.url);
+    };
+
+    const onTabMetaClick = async (tab: Tab) => {
       await TabsHelper.create(tab.url, false);
     };
 
@@ -176,6 +181,7 @@ export default defineComponent({
       addTab,
       removeTab,
       onTabClick,
+      onTabMetaClick,
     };
   },
 });
