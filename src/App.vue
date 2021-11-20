@@ -17,22 +17,23 @@
             <div
               v-for="tab of tabs"
               class="tab"
-              :key="tab.url"
-              @click.exact="onTabClick(tab)"
-              @click.meta="onTabMetaClick(tab)"
+              :class="{ highlight: tab.isHighlight }"
+              :key="tab.tab.url"
+              @click.exact="onTabClick(tab.tab)"
+              @click.meta="onTabMetaClick(tab.tab)"
             >
               <div
                 class="tab-favicon"
                 :style="{
-                  backgroundImage: `url('${tab.favIconUrl}')`,
+                  backgroundImage: `url('${tab.tab.favIconUrl}')`,
                 }"
               ></div>
-              <div class="tab-title">{{ tab.title }}</div>
+              <div class="tab-title">{{ tab.tab.title }}</div>
               <icon-button
                 class="tab-close"
                 iconName="clear"
                 size="small"
-                @click.native.stop="removeTab(tab.url)"
+                @click.native.stop="removeTab(tab.tab.url)"
               ></icon-button>
             </div>
           </div>
@@ -94,6 +95,12 @@ import TabRepository from './repositories/TabRepository';
 import { Tab, TabGroup } from './model/Tab';
 import TabsHelper from './helper/TabsHelper';
 
+// 画面表示用のタブクラス
+interface DisplayTab {
+  isHighlight: boolean;
+  tab: Tab;
+}
+
 export default defineComponent({
   name: 'App',
   components: {
@@ -120,11 +127,15 @@ export default defineComponent({
       console.log('redo');
     };
 
-    const tabs = ref<Tab[]>([]);
+    const tabs = ref<DisplayTab[]>([]);
     const tabGroups = ref<TabGroup[]>([]);
     const getTabStorage = async () => {
       const tabStorage = await TabRepository.fetch();
-      tabs.value = tabStorage?.tabs ?? [];
+      tabs.value =
+        tabStorage?.tabs?.map((tab) => ({
+          isHighlight: false,
+          tab,
+        })) ?? [];
       tabGroups.value = tabStorage?.tabGroups ?? [];
     };
     onMounted(getTabStorage);
@@ -136,25 +147,36 @@ export default defineComponent({
       if (url === undefined) {
         return;
       }
-      if (tabs.value.some((tab) => tab.url === url)) {
+
+      // すでに追加されているタブの場合は追加せず1秒だけハイライトする
+      const sameTab = tabs.value.find(({ tab }) => tab.url === url);
+      if (sameTab !== undefined) {
         console.log('url is already saved');
+        sameTab.isHighlight = true;
+        new Promise((resolve) => setTimeout(resolve, 1000)).then(() => {
+          sameTab.isHighlight = false;
+        });
         return;
       }
+
       tabs.value.push({
-        url: url,
-        title: currentTab.title ?? '',
-        favIconUrl: currentTab.favIconUrl ?? '',
+        isHighlight: false,
+        tab: {
+          url: url,
+          title: currentTab.title ?? '',
+          favIconUrl: currentTab.favIconUrl ?? '',
+        },
       });
       await TabRepository.save({
-        tabs: tabs.value.map((e) => e),
+        tabs: tabs.value.map(({ tab }) => tab),
         tabGroups: tabGroups.value.map((e) => e),
       });
     };
 
     const removeTab = async (url: string) => {
-      tabs.value = tabs.value.filter((tab) => tab.url !== url);
+      tabs.value = tabs.value.filter(({ tab }) => tab.url !== url);
       await TabRepository.save({
-        tabs: tabs.value.map((e) => e),
+        tabs: tabs.value.map(({ tab }) => tab),
         tabGroups: tabGroups.value.map((e) => e),
       });
     };
@@ -292,12 +314,18 @@ button {
   overflow: hidden;
   cursor: pointer;
   border-radius: 8px 8px 0 0;
-}
-.tab:hover {
-  background-color: $elevation-6dp;
-}
-.tab:active {
-  background-color: $elevation-16dp;
+
+  &.highlight {
+    background-color: $elevation-12dp;
+  }
+
+  &:hover {
+    background-color: $elevation-6dp;
+  }
+
+  &:active {
+    background-color: $elevation-16dp;
+  }
 }
 .tab-favicon {
   flex-grow: 0;
