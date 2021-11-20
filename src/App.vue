@@ -274,6 +274,9 @@ button {
 .tab:hover {
   background-color: $elevation-6dp;
 }
+.tab:active {
+  background-color: $elevation-16dp;
+}
 .tab-favicon {
   flex-grow: 0;
   flex-shrink: 0;
