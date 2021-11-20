@@ -18,7 +18,7 @@
               v-for="tab of tabs"
               class="tab"
               :key="tab.url"
-              @click="onTabClick(tab)"
+              @click.self="onTabClick(tab)"
             >
               <div
                 class="tab-favicon"
