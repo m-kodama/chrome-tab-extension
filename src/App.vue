@@ -21,6 +21,7 @@
               :key="tab.tab.url"
               @click.exact="onTabClick(tab.tab)"
               @click.meta="onTabMetaClick(tab.tab)"
+              @mousedown="onMouseDown"
             >
               <div
                 class="tab-favicon"
@@ -195,6 +196,59 @@ export default defineComponent({
       await TabsHelper.create(tab.url, false);
     };
 
+    let pointerPositionX: number | null = null;
+    let draggingElement: HTMLElement | null = null;
+    const onMouseDown = (event: Event) => {
+      if (!(event instanceof MouseEvent)) {
+        return;
+      }
+      const element = event.currentTarget;
+      if (!(element instanceof HTMLElement)) {
+        return;
+      }
+      pointerPositionX = event.clientX;
+      draggingElement = element;
+      draggingElement.style.cursor = 'grabbing';
+
+      window.addEventListener('mouseup', onMouseUp);
+      window.addEventListener('mousemove', onMouseMove);
+    };
+
+    const onMouseMove = (event: Event) => {
+      if (!(event instanceof MouseEvent)) {
+        return;
+      }
+      if (pointerPositionX === null || draggingElement === null) {
+        return;
+      }
+      const movementX = event.clientX - pointerPositionX;
+      draggingElement.style.zIndex = '5';
+      draggingElement.style.transform = `translateX(${movementX}px)`;
+    };
+
+    const onMouseUp = (event: Event) => {
+      // タブのクリックイベントを発生させないようにする
+      window.addEventListener(
+        'click',
+        (event: Event) => event.stopPropagation(),
+        { capture: true, once: true },
+      );
+      if (!(event instanceof MouseEvent)) {
+        return;
+      }
+      if (pointerPositionX === null || draggingElement === null) {
+        return;
+      }
+      draggingElement.style.cursor = 'pointer';
+      draggingElement.style.zIndex = '1';
+      draggingElement.style.transform = '';
+      pointerPositionX = null;
+      draggingElement = null;
+
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('mousemove', onMouseMove);
+    };
+
     return {
       undo,
       redo,
@@ -204,6 +258,7 @@ export default defineComponent({
       removeTab,
       onTabClick,
       onTabMetaClick,
+      onMouseDown,
     };
   },
 });
