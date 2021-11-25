@@ -15,10 +15,15 @@
           ></icon-button>
           <div class="tabs">
             <div
-              v-for="tab of tabs"
+              v-for="(tab, i) of tabs"
               class="tab"
               :class="{ highlight: tab.isHighlight }"
               :key="tab.tab.url"
+              :ref="
+                (el) => {
+                  if (el) tabElements[i] = el;
+                }
+              "
               @click.exact="onTabClick(tab.tab)"
               @click.meta="onTabMetaClick(tab.tab)"
               @mousedown="onMouseDown"
@@ -198,6 +203,8 @@ export default defineComponent({
 
     let pointerPositionX: number | null = null;
     let draggingElement: HTMLElement | null = null;
+    // TODO: 型調査
+    const tabElements = ref<any[]>([]);
     const onMouseDown = (event: Event) => {
       if (!(event instanceof MouseEvent)) {
         return;
@@ -221,9 +228,33 @@ export default defineComponent({
       if (pointerPositionX === null || draggingElement === null) {
         return;
       }
+      // タブ(DOM)を移動
       const movementX = event.clientX - pointerPositionX;
       draggingElement.style.zIndex = '5';
       draggingElement.style.transform = `translateX(${movementX}px)`;
+
+      // 他のタブと重なり判定
+      let i = 0;
+      for (const element of tabElements.value) {
+        if (element === draggingElement) {
+          continue;
+        }
+        const draggingRect = draggingElement.getBoundingClientRect();
+        const rect = element.getBoundingClientRect() as DOMRect;
+        const rectCenter = rect.left + (rect.right - rect.left) / 2;
+        if (rect.left < draggingRect.left && draggingRect.left < rectCenter) {
+          const draggingElementIndex =
+            tabElements.value.indexOf(draggingElement);
+          const list = [...tabs.value];
+          [list[i], list[draggingElementIndex]] = [
+            list[draggingElementIndex],
+            list[i],
+          ];
+          tabs.value = list;
+          return;
+        }
+        i++;
+      }
     };
 
     const onMouseUp = (event: Event) => {
@@ -254,6 +285,7 @@ export default defineComponent({
       redo,
       tabs,
       tabGroups,
+      tabElements,
       addTab,
       removeTab,
       onTabClick,
