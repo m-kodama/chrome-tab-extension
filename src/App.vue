@@ -24,6 +24,7 @@
                   if (el) tabElements[i] = el;
                 }
               "
+              :data-index="i"
               @click.exact="onTabClick(tab.tab)"
               @click.meta="onTabMetaClick(tab.tab)"
               @mousedown="onMouseDown"
@@ -233,27 +234,46 @@ export default defineComponent({
       draggingElement.style.zIndex = '5';
       draggingElement.style.transform = `translateX(${movementX}px)`;
 
-      // 他のタブと重なり判定
-      let i = 0;
-      for (const element of tabElements.value) {
-        if (element === draggingElement) {
-          continue;
-        }
-        const draggingRect = draggingElement.getBoundingClientRect();
+      // タブの重なり判定
+      const draggingElementIndex = Number(draggingElement.dataset['index']);
+      const draggingRect = draggingElement.getBoundingClientRect();
+      for (let i = 0; i < tabElements.value.length; i++) {
+        const element = tabElements.value[i];
         const rect = element.getBoundingClientRect() as DOMRect;
-        const rectCenter = rect.left + (rect.right - rect.left) / 2;
-        if (rect.left < draggingRect.left && draggingRect.left < rectCenter) {
-          const draggingElementIndex =
-            tabElements.value.indexOf(draggingElement);
+        const reactWidth = rect.right - rect.left;
+        const rectCenter = rect.left + reactWidth / 2;
+
+        // 前のタブとの入れ替え判定
+        const shouldSwapBefore =
+          i < draggingElementIndex && draggingRect.left < rectCenter;
+        if (shouldSwapBefore) {
           const list = [...tabs.value];
-          [list[i], list[draggingElementIndex]] = [
+          [list[draggingElementIndex - 1], list[draggingElementIndex]] = [
             list[draggingElementIndex],
-            list[i],
+            list[draggingElementIndex - 1],
           ];
           tabs.value = list;
-          return;
+          pointerPositionX -= reactWidth;
+          draggingElement.style.transform = `translateX(${
+            movementX + reactWidth
+          }px)`;
         }
-        i++;
+
+        // 後ろのタブとの入れ替え判定
+        const shouldSwapAfter =
+          draggingElementIndex < i && rectCenter < draggingRect.right;
+        if (shouldSwapAfter) {
+          const list = [...tabs.value];
+          [list[draggingElementIndex + 1], list[draggingElementIndex]] = [
+            list[draggingElementIndex],
+            list[draggingElementIndex + 1],
+          ];
+          tabs.value = list;
+          pointerPositionX += reactWidth;
+          draggingElement.style.transform = `translateX(${
+            movementX - reactWidth
+          }px)`;
+        }
       }
     };
 
