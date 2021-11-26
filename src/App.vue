@@ -298,6 +298,11 @@ export default defineComponent({
 
       window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('mousemove', onMouseMove);
+
+      TabRepository.save({
+        tabs: tabs.value.map(({ tab }) => tab),
+        tabGroups: tabGroups.value.map((e) => e),
+      });
     };
 
     return {
