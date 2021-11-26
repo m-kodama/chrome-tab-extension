@@ -204,6 +204,7 @@ export default defineComponent({
 
     let pointerPositionX: number | null = null;
     let draggingElement: HTMLElement | null = null;
+    let mouseMoved = false;
     // TODO: 型調査
     const tabElements = ref<any[]>([]);
     const onMouseDown = (event: Event) => {
@@ -217,6 +218,7 @@ export default defineComponent({
       pointerPositionX = event.clientX;
       draggingElement = element;
       draggingElement.style.cursor = 'grabbing';
+      mouseMoved = false;
 
       window.addEventListener('mouseup', onMouseUp);
       window.addEventListener('mousemove', onMouseMove);
@@ -229,6 +231,8 @@ export default defineComponent({
       if (pointerPositionX === null || draggingElement === null) {
         return;
       }
+      mouseMoved = true;
+
       // タブ(DOM)を移動
       const movementX = event.clientX - pointerPositionX;
       draggingElement.style.zIndex = '5';
@@ -278,12 +282,6 @@ export default defineComponent({
     };
 
     const onMouseUp = (event: Event) => {
-      // タブのクリックイベントを発生させないようにする
-      window.addEventListener(
-        'click',
-        (event: Event) => event.stopPropagation(),
-        { capture: true, once: true },
-      );
       if (!(event instanceof MouseEvent)) {
         return;
       }
@@ -298,6 +296,18 @@ export default defineComponent({
 
       window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('mousemove', onMouseMove);
+
+      // ドラッグされなかった場合ここで処理終了
+      if (!mouseMoved) {
+        return;
+      }
+
+      // タブのクリックイベントを発生させないようにする
+      window.addEventListener(
+        'click',
+        (event: Event) => event.stopPropagation(),
+        { capture: true, once: true },
+      );
 
       TabRepository.save({
         tabs: tabs.value.map(({ tab }) => tab),
