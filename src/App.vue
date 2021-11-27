@@ -95,7 +95,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref } from 'vue';
+import { defineComponent, onBeforeUpdate, onMounted, ref } from 'vue';
+import * as RuntimeCore from '@vue/runtime-core';
 import Icon from '@/components/common/icons/Icon.vue';
 import IconButton from '@/components/common/buttons/IconButton.vue';
 import TabRepository from './repositories/TabRepository';
@@ -107,6 +108,8 @@ interface DisplayTab {
   isHighlight: boolean;
   tab: Tab;
 }
+
+type TemplateRef = Element | RuntimeCore.ComponentPublicInstance;
 
 export default defineComponent({
   name: 'App',
@@ -205,8 +208,11 @@ export default defineComponent({
     let pointerPositionX: number | null = null;
     let draggingElement: HTMLElement | null = null;
     let mouseMoved = false;
-    // TODO: 型調査
-    const tabElements = ref<any[]>([]);
+    const tabElements = ref<TemplateRef[]>([]);
+    onBeforeUpdate(() => {
+      tabElements.value = [];
+    });
+
     const onMouseDown = (event: Event) => {
       if (!(event instanceof MouseEvent)) {
         return;
@@ -243,7 +249,10 @@ export default defineComponent({
       const draggingRect = draggingElement.getBoundingClientRect();
       for (let i = 0; i < tabElements.value.length; i++) {
         const element = tabElements.value[i];
-        const rect = element.getBoundingClientRect() as DOMRect;
+        if (!(element instanceof Element)) {
+          continue;
+        }
+        const rect = element.getBoundingClientRect();
         const reactWidth = rect.right - rect.left;
         const rectCenter = rect.left + reactWidth / 2;
 
