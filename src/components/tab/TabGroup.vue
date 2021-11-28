@@ -48,10 +48,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onBeforeUpdate, PropType, ref } from 'vue';
+import { defineComponent, onBeforeUpdate, PropType, ref, watch } from 'vue';
 import * as RuntimeCore from '@vue/runtime-core';
 import IconButton from '@/components/common/buttons/IconButton.vue';
 import { Tab, TabGroupColor } from '../.././model/Tab';
+import TabsHelper from '@/helper/TabsHelper';
 
 // 画面表示用のタブクラス
 interface DisplayTab {
@@ -81,13 +82,10 @@ export default defineComponent({
     },
   },
   emits: {
-    addTab: () => true,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    addTab: (tab: Tab) => true,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     removeTab: (url: string) => true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    tabClicked: (tab: Tab) => true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    tabMetaClicked: (tab: Tab) => true,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     tabSorted: (sortedTabs: Tab[]) => true,
   },
@@ -99,11 +97,58 @@ export default defineComponent({
         tab,
       })),
     );
+    watch(
+      () => props.tabs,
+      (newValue, oldValue) => {
+        if (newValue === oldValue) {
+          return;
+        }
+        displayTabs.value = newValue.map((tab) => ({
+          isHighlight: false,
+          tab,
+        }));
+      },
+    );
 
-    const addTab = () => emit('addTab');
+    const addTab = async () => {
+      const currentTab = await TabsHelper.getCurrentTab();
+      console.log(currentTab);
+      const { url } = currentTab;
+      if (url === undefined) {
+        return;
+      }
+
+      // すでに追加されているタブの場合は追加せず1秒だけハイライトする
+      const sameTab = displayTabs.value.find(({ tab }) => tab.url === url);
+      if (sameTab !== undefined) {
+        console.log('url is already saved');
+        sameTab.isHighlight = true;
+        new Promise((resolve) => setTimeout(resolve, 1000)).then(() => {
+          sameTab.isHighlight = false;
+        });
+        return;
+      }
+      emit('addTab', {
+        url: url,
+        title: currentTab.title ?? '',
+        favIconUrl: currentTab.favIconUrl ?? '',
+      });
+    };
     const removeTab = (url: string) => emit('removeTab', url);
-    const onTabClick = (tab: Tab) => emit('tabClicked', tab);
-    const onTabMetaClick = (tab: Tab) => emit('tabMetaClicked', tab);
+
+    const onTabClick = async (tab: Tab) => {
+      // 現在のwindowでそのタブを開いている場合はそのタブを表示する
+      const tabs = await TabsHelper.findByUrl(tab.url);
+      if (tabs.length !== 0) {
+        await TabsHelper.toActive(tabs[0].index);
+        return;
+      }
+      await TabsHelper.create(tab.url);
+    };
+
+    const onTabMetaClick = async (tab: Tab) => {
+      await TabsHelper.create(tab.url, false);
+    };
 
     // タブのソート機能
     let pointerPositionX: number | null = null;
@@ -238,7 +283,8 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+@import '../../scss/_variables.scss';
 .tab-group-tag {
   max-width: 80px;
   color: $elevation-0dp;
