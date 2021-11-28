@@ -20,4 +20,4 @@ const tabGroupColors = [
   '#BE9BDC',
   '#77D9EB',
 ] as const;
-type TabGroupColor = typeof tabGroupColors[number];
+export type TabGroupColor = typeof tabGroupColors[number];
