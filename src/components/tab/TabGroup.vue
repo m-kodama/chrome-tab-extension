@@ -80,14 +80,18 @@ export default defineComponent({
       type: String as PropType<TabGroupColor | null>,
       default: null,
     },
+    groupIndex: {
+      type: Number as PropType<number | null>,
+      default: null,
+    },
   },
   emits: {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    addTab: (tab: Tab) => true,
+    addTab: (groupIndex: number | null, tab: Tab) => true,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    removeTab: (url: string) => true,
+    removeTab: (groupIndex: number | null, url: string) => true,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    tabSorted: (sortedTabs: Tab[]) => true,
+    tabSorted: (groupIndex: number | null, sortedTabs: Tab[]) => true,
   },
   setup(props, { emit }) {
     // タブを表示用のデータに変換
@@ -112,7 +116,6 @@ export default defineComponent({
 
     const addTab = async () => {
       const currentTab = await TabsHelper.getCurrentTab();
-      console.log(currentTab);
       const { url } = currentTab;
       if (url === undefined) {
         return;
@@ -121,20 +124,19 @@ export default defineComponent({
       // すでに追加されているタブの場合は追加せず1秒だけハイライトする
       const sameTab = displayTabs.value.find(({ tab }) => tab.url === url);
       if (sameTab !== undefined) {
-        console.log('url is already saved');
         sameTab.isHighlight = true;
         new Promise((resolve) => setTimeout(resolve, 1000)).then(() => {
           sameTab.isHighlight = false;
         });
         return;
       }
-      emit('addTab', {
+      emit('addTab', props.groupIndex, {
         url: url,
         title: currentTab.title ?? '',
         favIconUrl: currentTab.favIconUrl ?? '',
       });
     };
-    const removeTab = (url: string) => emit('removeTab', url);
+    const removeTab = (url: string) => emit('removeTab', props.groupIndex, url);
 
     const onTabClick = async (tab: Tab) => {
       // 現在のwindowでそのタブを開いている場合はそのタブを表示する
@@ -266,6 +268,7 @@ export default defineComponent({
 
       emit(
         'tabSorted',
+        props.groupIndex,
         displayTabs.value.map((e) => e.tab),
       );
     };
@@ -297,6 +300,7 @@ export default defineComponent({
 }
 .tab-group-tag-title {
   width: 100%;
+  white-space: nowrap;
   -webkit-mask-image: linear-gradient(
     90deg,
     #fff 0%,

@@ -14,17 +14,18 @@
       ></tab-group-view>
       <!-- タブグループ -->
       <tab-group-view
-        v-for="tabGroup of tabGroups"
+        v-for="(tabGroup, index) of tabGroups"
         :key="tabGroup.groupName"
         :tabs="tabGroup.tabs"
         :group-color="tabGroup.color"
         :group-name="tabGroup.groupName"
+        :group-index="index"
         @add-tab="addTab"
         @remove-tab="removeTab"
         @tab-sorted="tabSorted"
       >
       </tab-group-view>
-      <button class="add-group-button">
+      <button class="add-group-button" @click="addTabGroup">
         <icon
           name="addCircleOutline"
           iconColor="rgba(255, 255, 255, 0.72)"
@@ -37,7 +38,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref } from 'vue';
+import { defineComponent, onMounted, ref, unref } from 'vue';
 import Icon from '@/components/common/icons/Icon.vue';
 import TabGroupView from '@/components/tab/TabGroup.vue';
 import TabRepository from './repositories/TabRepository';
@@ -57,7 +58,6 @@ export default defineComponent({
       if (event.key !== 'z') {
         return;
       }
-      console.log('undo');
     };
     const redo = (event: Event) => {
       if (!(event instanceof KeyboardEvent)) {
@@ -66,11 +66,11 @@ export default defineComponent({
       if (event.key !== 'z') {
         return;
       }
-      console.log('redo');
     };
 
     const tabs = ref<Tab[]>([]);
     const tabGroups = ref<TabGroup[]>([]);
+
     const fetchTabStorage = async () => {
       const tabStorage = await TabRepository.fetch();
       tabs.value = tabStorage?.tabs ?? [];
@@ -79,28 +79,62 @@ export default defineComponent({
 
     onMounted(fetchTabStorage);
 
-    const addTab = async (tab: Tab) => {
-      tabs.value = [...tabs.value, tab];
+    const saveTabStorage = async () => {
       await TabRepository.save({
         tabs: tabs.value.map((e) => e),
-        tabGroups: tabGroups.value.map((e) => e),
+        tabGroups: tabGroups.value.map((e) => ({
+          ...e,
+          tabs: e.tabs.map((t) => t),
+        })),
       });
     };
 
-    const removeTab = async (url: string) => {
-      tabs.value = tabs.value.filter((tab) => tab.url !== url);
-      await TabRepository.save({
-        tabs: tabs.value.map((e) => e),
-        tabGroups: tabGroups.value.map((e) => e),
-      });
+    const addTab = async (groupIndex: number | null, tab: Tab) => {
+      if (groupIndex === null) {
+        tabs.value = [...tabs.value, tab];
+      } else {
+        tabGroups.value[groupIndex].tabs = [
+          ...tabGroups.value[groupIndex].tabs,
+          tab,
+        ];
+      }
+      await saveTabStorage();
     };
 
-    const tabSorted = (sortedTabs: Tab[]) => {
-      tabs.value = sortedTabs;
-      TabRepository.save({
-        tabs: tabs.value.map((e) => e),
-        tabGroups: tabGroups.value.map((e) => e),
-      });
+    const removeTab = async (groupIndex: number | null, url: string) => {
+      if (groupIndex === null) {
+        tabs.value = tabs.value.filter((tab) => tab.url !== url);
+      } else {
+        tabGroups.value[groupIndex].tabs = tabGroups.value[
+          groupIndex
+        ].tabs.filter((tab) => tab.url !== url);
+      }
+      await saveTabStorage();
+    };
+
+    const tabSorted = (groupIndex: number | null, sortedTabs: Tab[]) => {
+      if (groupIndex === null) {
+        tabs.value = sortedTabs;
+      } else {
+        tabGroups.value[groupIndex].tabs = sortedTabs;
+      }
+      saveTabStorage();
+    };
+
+    const addTabGroup = async () => {
+      const defaultGroupName = 'New Group';
+      const num = tabGroups.value.filter((tabGroup) =>
+        tabGroup.groupName.startsWith(defaultGroupName),
+      ).length;
+      tabGroups.value = [
+        ...tabGroups.value,
+        {
+          tabs: [],
+          groupName: `${defaultGroupName}${num + 1}`,
+          color: '#BDC1C5',
+        },
+      ];
+      await saveTabStorage();
     };
 
     return {
@@ -111,6 +145,7 @@ export default defineComponent({
       addTab,
       removeTab,
       tabSorted,
+      addTabGroup,
     };
   },
 });
