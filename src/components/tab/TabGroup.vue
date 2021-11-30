@@ -2,13 +2,14 @@
   <div class="tab-group">
     <div class="tab-group-content">
       <div
-        v-if="groupName !== null && groupColor !== null"
+        v-if="currentName !== null && currentColor !== null"
         class="tab-group-tag"
         :style="{
-          backgroundColor: groupColor,
+          backgroundColor: currentColor,
         }"
+        @click.left="showMenu"
       >
-        <div class="tab-group-tag-title">{{ groupName }}</div>
+        <div class="tab-group-tag-title">{{ currentName }}</div>
       </div>
       <icon-button class="tab-add" iconName="add" @click="addTab"></icon-button>
       <div class="tabs">
@@ -44,14 +45,51 @@
       </div>
     </div>
     <div class="tab-bottom-bar"></div>
+    <div v-if="isShowMenu" class="barrier" @click.left="hideMenu"></div>
+    <div v-if="isShowMenu" class="tab-group-menu">
+      <input type="text" class="group-name-field" v-model="currentName" />
+      <div class="color-selector">
+        <div
+          class="color-selector-button"
+          v-for="color in groupColors"
+          :key="color"
+          @click="changeColor(color)"
+        >
+          <icon
+            v-if="color === currentColor"
+            name="radioButtonChecked"
+            :iconColor="color"
+            :size="20"
+          />
+          <icon v-else name="circle" :iconColor="color" :size="16" />
+        </div>
+      </div>
+      <div class="vertical-divider"></div>
+      <button class="tab-group-menu-button">
+        <icon
+          name="deleteOutline"
+          iconColor="rgba(255, 255, 255, 0.72)"
+          :size="20"
+        ></icon>
+        Delete Group
+      </button>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, onBeforeUpdate, PropType, ref, watch } from 'vue';
+import {
+  computed,
+  defineComponent,
+  onBeforeUpdate,
+  PropType,
+  ref,
+  watch,
+} from 'vue';
 import * as RuntimeCore from '@vue/runtime-core';
+import Icon from '@/components/common/icons/Icon.vue';
 import IconButton from '@/components/common/buttons/IconButton.vue';
-import { Tab, TabGroupColor } from '../.././model/Tab';
+import { Tab, TabGroupColor, tabGroupColors } from '../.././model/Tab';
 import TabsHelper from '@/helper/TabsHelper';
 
 // 画面表示用のタブクラス
@@ -65,6 +103,7 @@ type TemplateRef = Element | RuntimeCore.ComponentPublicInstance;
 export default defineComponent({
   name: 'App',
   components: {
+    Icon,
     IconButton,
   },
   props: {
@@ -273,6 +312,21 @@ export default defineComponent({
       );
     };
 
+    const isShowMenu = ref<boolean>(false);
+    const showMenu = () => {
+      isShowMenu.value = true;
+    };
+    const hideMenu = () => {
+      isShowMenu.value = false;
+    };
+
+    const groupColors = computed(() => tabGroupColors);
+    const currentName = ref(props.groupName);
+    const currentColor = ref(props.groupColor);
+    const changeColor = (color: TabGroupColor) => {
+      currentColor.value = color;
+    };
+
     return {
       displayTabs,
       tabElements,
@@ -281,6 +335,13 @@ export default defineComponent({
       onTabClick,
       onTabMetaClick,
       onMouseDown,
+      isShowMenu,
+      showMenu,
+      hideMenu,
+      groupColors,
+      currentName,
+      currentColor,
+      changeColor,
     };
   },
 });
@@ -397,5 +458,85 @@ export default defineComponent({
   width: 100%;
   height: 4px;
   background-color: $elevation-16dp;
+}
+.barrier {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: 998;
+}
+@keyframes slidein {
+  from {
+    transform: translateY(-2px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0px);
+    opacity: 1;
+  }
+}
+.tab-group-menu {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 0px 8px 4px 8px;
+  background-color: $elevation-16dp;
+  position: relative;
+  z-index: 999;
+  animation: slidein 200ms ease-in;
+}
+.group-name-field {
+  appearance: none;
+  width: 128px;
+  height: 28px;
+  border-radius: 4px;
+  font-size: 13px;
+  padding: 0px 4px;
+  color: white;
+  background-color: $elevation-2dp;
+  border: none;
+  outline: none;
+  &:focus {
+    outline: solid 2px #4185f0;
+  }
+}
+.color-selector {
+  display: flex;
+  align-items: center;
+}
+.color-selector-button {
+  display: flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+}
+.vertical-divider {
+  width: 1px;
+  height: 24px;
+  background-color: $divider;
+}
+.tab-group-menu-button {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 8px 4px 2px;
+  color: $text-sub-color;
+  gap: 4px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0);
+  transition: background 80ms;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.24);
+  }
+
+  &:focus {
+    background-color: rgba(255, 255, 255, 0.24);
+  }
 }
 </style>

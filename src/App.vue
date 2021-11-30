@@ -38,7 +38,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, unref } from 'vue';
+import { defineComponent, onMounted, ref } from 'vue';
 import Icon from '@/components/common/icons/Icon.vue';
 import TabGroupView from '@/components/tab/TabGroup.vue';
 import TabRepository from './repositories/TabRepository';
