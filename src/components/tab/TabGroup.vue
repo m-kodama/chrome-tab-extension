@@ -70,6 +70,24 @@
         </div>
       </div>
       <div class="vertical-divider"></div>
+      <button class="tab-group-menu-button" @click="upGroup">
+        <icon
+          name="arrowUpward"
+          iconColor="rgba(255, 255, 255, 0.72)"
+          :size="20"
+        ></icon>
+        Up
+      </button>
+      <button class="tab-group-menu-button" @click="downGroup">
+        <icon
+          name="arrowDownward"
+          iconColor="rgba(255, 255, 255, 0.72)"
+          :size="20"
+        ></icon>
+        Down
+      </button>
+      <div style="flex: 1 1 0"></div>
+      <div class="vertical-divider"></div>
       <button class="tab-group-menu-button" @click="removeGroup">
         <icon
           name="deleteOutline"
@@ -143,6 +161,10 @@ export default defineComponent({
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     changeGroupColor: (groupIndex: number | null, groupColor: TabGroupColor) =>
       true,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    upGroup: (groupIndex: number | null) => true,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    downGroup: (groupIndex: number | null) => true,
   },
   setup(props, { emit }) {
     // タブを表示用のデータに変換
@@ -351,6 +373,9 @@ export default defineComponent({
     };
     const removeGroup = () => emit('removeGroup', props.groupIndex);
 
+    const upGroup = () => emit('upGroup', props.groupIndex);
+    const downGroup = () => emit('downGroup', props.groupIndex);
+
     return {
       displayTabs,
       tabElements,
@@ -368,6 +393,8 @@ export default defineComponent({
       changeGroupName,
       changeGroupColor,
       removeGroup,
+      upGroup,
+      downGroup,
     };
   },
 });
