@@ -471,6 +471,7 @@ export default defineComponent({
   left: 0px;
   top: 0px;
   z-index: 998;
+  background-color: rgba(0, 0, 0, 0.32);
 }
 @keyframes slidein {
   from {
@@ -487,9 +488,10 @@ export default defineComponent({
   display: flex;
   gap: 8px;
   align-items: center;
-  padding: 0px 8px 4px 8px;
+  padding: 4px 8px 4px 8px;
   background-color: $elevation-16dp;
   position: relative;
+  top: -4px;
   z-index: 999;
   animation: slidein 200ms ease-in;
 }
