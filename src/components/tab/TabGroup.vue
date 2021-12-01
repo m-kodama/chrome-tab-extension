@@ -47,13 +47,18 @@
     <div class="tab-bottom-bar"></div>
     <div v-if="isShowMenu" class="barrier" @click.left="hideMenu"></div>
     <div v-if="isShowMenu" class="tab-group-menu">
-      <input type="text" class="group-name-field" v-model="currentName" />
+      <input
+        type="text"
+        class="group-name-field"
+        v-model="currentName"
+        @change="changeGroupName"
+      />
       <div class="color-selector">
         <div
           class="color-selector-button"
           v-for="color in groupColors"
           :key="color"
-          @click="changeColor(color)"
+          @click="changeGroupColor(color)"
         >
           <icon
             v-if="color === currentColor"
@@ -133,6 +138,11 @@ export default defineComponent({
     tabSorted: (groupIndex: number | null, sortedTabs: Tab[]) => true,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     removeGroup: (groupIndex: number | null) => true,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    changeGroupName: (groupIndex: number | null, groupName: string) => true,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    changeGroupColor: (groupIndex: number | null, groupColor: TabGroupColor) =>
+      true,
   },
   setup(props, { emit }) {
     // タブを表示用のデータに変換
@@ -325,10 +335,20 @@ export default defineComponent({
     const groupColors = computed(() => tabGroupColors);
     const currentName = ref(props.groupName);
     const currentColor = ref(props.groupColor);
-    const changeColor = (color: TabGroupColor) => {
+    const changeGroupName = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) {
+        return;
+      }
+      emit('changeGroupName', props.groupIndex, target.value);
+    };
+    const changeGroupColor = (color: TabGroupColor) => {
+      if (color === currentColor.value) {
+        return;
+      }
+      emit('changeGroupColor', props.groupIndex, color);
       currentColor.value = color;
     };
-
     const removeGroup = () => emit('removeGroup', props.groupIndex);
 
     return {
@@ -345,7 +365,8 @@ export default defineComponent({
       groupColors,
       currentName,
       currentColor,
-      changeColor,
+      changeGroupName,
+      changeGroupColor,
       removeGroup,
     };
   },

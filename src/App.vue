@@ -23,6 +23,8 @@
         @add-tab="addTab"
         @remove-tab="removeTab"
         @tab-sorted="tabSorted"
+        @change-group-name="changeGroupName"
+        @change-group-color="changeGroupColor"
         @remove-group="removeGroup"
       >
       </tab-group-view>
@@ -43,7 +45,7 @@ import { defineComponent, onMounted, ref } from 'vue';
 import Icon from '@/components/common/icons/Icon.vue';
 import TabGroupView from '@/components/tab/TabGroup.vue';
 import TabRepository from './repositories/TabRepository';
-import { Tab, TabGroup } from './model/Tab';
+import { Tab, TabGroup, TabGroupColor } from './model/Tab';
 
 export default defineComponent({
   name: 'App',
@@ -122,6 +124,28 @@ export default defineComponent({
       saveTabStorage();
     };
 
+    const changeGroupName = async (
+      groupIndex: number | null,
+      groupName: string,
+    ) => {
+      if (groupIndex === null) {
+        return;
+      }
+      tabGroups.value[groupIndex].groupName = groupName;
+      await saveTabStorage();
+    };
+
+    const changeGroupColor = async (
+      groupIndex: number | null,
+      groupColor: TabGroupColor,
+    ) => {
+      if (groupIndex === null) {
+        return;
+      }
+      tabGroups.value[groupIndex].color = groupColor;
+      await saveTabStorage();
+    };
+
     const removeGroup = async (groupIndex: number | null) => {
       if (groupIndex === null) {
         return;
@@ -154,6 +178,8 @@ export default defineComponent({
       addTab,
       removeTab,
       tabSorted,
+      changeGroupName,
+      changeGroupColor,
       removeGroup,
       addTabGroup,
     };
