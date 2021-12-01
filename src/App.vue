@@ -23,6 +23,7 @@
         @add-tab="addTab"
         @remove-tab="removeTab"
         @tab-sorted="tabSorted"
+        @remove-group="removeGroup"
       >
       </tab-group-view>
       <button class="add-group-button" @click="addTabGroup">
@@ -121,6 +122,14 @@ export default defineComponent({
       saveTabStorage();
     };
 
+    const removeGroup = async (groupIndex: number | null) => {
+      if (groupIndex === null) {
+        return;
+      }
+      tabGroups.value.splice(groupIndex, 1);
+      await saveTabStorage();
+    };
+
     const addTabGroup = async () => {
       const defaultGroupName = 'New Group';
       const num = tabGroups.value.filter((tabGroup) =>
@@ -145,6 +154,7 @@ export default defineComponent({
       addTab,
       removeTab,
       tabSorted,
+      removeGroup,
       addTabGroup,
     };
   },

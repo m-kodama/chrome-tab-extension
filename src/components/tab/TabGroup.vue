@@ -65,7 +65,7 @@
         </div>
       </div>
       <div class="vertical-divider"></div>
-      <button class="tab-group-menu-button">
+      <button class="tab-group-menu-button" @click="removeGroup">
         <icon
           name="deleteOutline"
           iconColor="rgba(255, 255, 255, 0.72)"
@@ -131,6 +131,8 @@ export default defineComponent({
     removeTab: (groupIndex: number | null, url: string) => true,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     tabSorted: (groupIndex: number | null, sortedTabs: Tab[]) => true,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    removeGroup: (groupIndex: number | null) => true,
   },
   setup(props, { emit }) {
     // タブを表示用のデータに変換
@@ -327,6 +329,8 @@ export default defineComponent({
       currentColor.value = color;
     };
 
+    const removeGroup = () => emit('removeGroup', props.groupIndex);
+
     return {
       displayTabs,
       tabElements,
@@ -342,6 +346,7 @@ export default defineComponent({
       currentName,
       currentColor,
       changeColor,
+      removeGroup,
     };
   },
 });
