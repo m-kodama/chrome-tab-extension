@@ -5,6 +5,7 @@
     type="button"
     :autofocus="autofocus"
     :style="style"
+    :tabIndex="tabIndex"
   >
     <icon :name="iconName" :iconColor="iconColor" :size="iconSize" />
   </button>
@@ -44,6 +45,10 @@ export default defineComponent({
     autofocus: {
       type: Boolean,
       default: false,
+    },
+    tabIndex: {
+      type: Number as PropType<number>,
+      default: 9999,
     },
     iconName: {
       type: String as PropType<IconName>,

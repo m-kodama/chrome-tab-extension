@@ -11,7 +11,12 @@
       >
         <div class="tab-group-tag-title">{{ currentName }}</div>
       </div>
-      <icon-button class="tab-add" iconName="add" @click="addTab"></icon-button>
+      <icon-button
+        class="tab-add"
+        iconName="add"
+        @click="addTab"
+        :autofocus="groupIndex === null"
+      ></icon-button>
       <div class="tabs">
         <div
           v-for="(tab, i) of displayTabs"
@@ -39,6 +44,7 @@
             class="tab-close"
             iconName="clear"
             size="small"
+            :tabIndex="-1"
             @click.native.stop="removeTab(tab.tab.url)"
           ></icon-button>
         </div>
@@ -49,6 +55,7 @@
     <div v-if="isShowMenu" class="tab-group-menu">
       <input
         type="text"
+        ref="groupNameInput"
         class="group-name-field"
         v-model="currentName"
         @change="changeGroupName"
@@ -104,6 +111,7 @@
 import {
   computed,
   defineComponent,
+  nextTick,
   onBeforeUpdate,
   PropType,
   ref,
@@ -346,9 +354,13 @@ export default defineComponent({
       );
     };
 
+    const groupNameInput = ref<HTMLInputElement>();
     const isShowMenu = ref<boolean>(false);
-    const showMenu = () => {
+    const showMenu = async () => {
       isShowMenu.value = true;
+      nextTick(() => {
+        groupNameInput.value?.focus();
+      });
     };
     const hideMenu = () => {
       isShowMenu.value = false;
@@ -384,6 +396,7 @@ export default defineComponent({
       onTabClick,
       onTabMetaClick,
       onMouseDown,
+      groupNameInput,
       isShowMenu,
       showMenu,
       hideMenu,
