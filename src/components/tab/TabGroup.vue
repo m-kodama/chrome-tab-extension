@@ -403,7 +403,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import '../../scss/_variables.scss';
 .tab-group-tag {
-  max-width: 80px;
+  max-width: 108px;
   color: $elevation-0dp;
   border-radius: 6px;
   padding: 4px 6px;
@@ -411,6 +411,7 @@ export default defineComponent({
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  cursor: pointer;
 }
 .tab-group-tag-title {
   width: 100%;
@@ -418,13 +419,13 @@ export default defineComponent({
   -webkit-mask-image: linear-gradient(
     90deg,
     #fff 0%,
-    #fff calc(80px - 24px),
+    #fff calc(108px - 24px),
     transparent
   );
   mask-image: linear-gradient(
     90deg,
     #fff 0%,
-    #fff calc(80px - 24px),
+    #fff calc(108px - 24px),
     transparent
   );
 }
@@ -568,6 +569,7 @@ export default defineComponent({
   height: 28px;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 .vertical-divider {
   width: 1px;
