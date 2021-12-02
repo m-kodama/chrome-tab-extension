@@ -1,3 +1,153 @@
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import Icon from '@/components/common/icons/Icon.vue';
+import TabGroupView from '@/components/tab/TabGroup.vue';
+import TabRepository from './repositories/TabRepository';
+import { Tab, TabGroup, TabGroupColor } from './model/Tab';
+
+const undo = (event: Event) => {
+  if (!(event instanceof KeyboardEvent)) {
+    return;
+  }
+  if (event.key !== 'z') {
+    return;
+  }
+};
+const redo = (event: Event) => {
+  if (!(event instanceof KeyboardEvent)) {
+    return;
+  }
+  if (event.key !== 'z') {
+    return;
+  }
+};
+
+const tabs = ref<Tab[]>([]);
+const tabGroups = ref<TabGroup[]>([]);
+
+const fetchTabStorage = async () => {
+  const tabStorage = await TabRepository.fetch();
+  tabs.value = tabStorage?.tabs ?? [];
+  tabGroups.value = tabStorage?.tabGroups ?? [];
+};
+
+onMounted(fetchTabStorage);
+
+const saveTabStorage = async () => {
+  await TabRepository.save({
+    tabs: tabs.value.map((e) => e),
+    tabGroups: tabGroups.value.map((e) => ({
+      ...e,
+      tabs: e.tabs.map((t) => t),
+    })),
+  });
+};
+
+const addTab = async (groupIndex: number | null, tab: Tab) => {
+  if (groupIndex === null) {
+    tabs.value = [...tabs.value, tab];
+  } else {
+    tabGroups.value[groupIndex].tabs = [
+      ...tabGroups.value[groupIndex].tabs,
+      tab,
+    ];
+  }
+  await saveTabStorage();
+};
+
+const removeTab = async (groupIndex: number | null, url: string) => {
+  if (groupIndex === null) {
+    tabs.value = tabs.value.filter((tab) => tab.url !== url);
+  } else {
+    tabGroups.value[groupIndex].tabs = tabGroups.value[groupIndex].tabs.filter(
+      (tab) => tab.url !== url,
+    );
+  }
+  await saveTabStorage();
+};
+
+const tabSorted = (groupIndex: number | null, sortedTabs: Tab[]) => {
+  if (groupIndex === null) {
+    tabs.value = sortedTabs;
+  } else {
+    tabGroups.value[groupIndex].tabs = sortedTabs;
+  }
+  saveTabStorage();
+};
+
+const changeGroupName = async (
+  groupIndex: number | null,
+  groupName: string,
+) => {
+  if (groupIndex === null) {
+    return;
+  }
+  tabGroups.value[groupIndex].groupName = groupName;
+  await saveTabStorage();
+};
+
+const changeGroupColor = async (
+  groupIndex: number | null,
+  groupColor: TabGroupColor,
+) => {
+  if (groupIndex === null) {
+    return;
+  }
+  tabGroups.value[groupIndex].color = groupColor;
+  await saveTabStorage();
+};
+
+const removeGroup = async (groupIndex: number | null) => {
+  if (groupIndex === null) {
+    return;
+  }
+  tabGroups.value.splice(groupIndex, 1);
+  await saveTabStorage();
+};
+
+const upGroup = async (groupIndex: number | null) => {
+  if (groupIndex === null || groupIndex === 0) {
+    return;
+  }
+  const list = [...tabGroups.value];
+  [list[groupIndex - 1], list[groupIndex]] = [
+    list[groupIndex],
+    list[groupIndex - 1],
+  ];
+  tabGroups.value = list;
+  await saveTabStorage();
+};
+
+const downGroup = async (groupIndex: number | null) => {
+  if (groupIndex === null || groupIndex === tabGroups.value.length - 1) {
+    return;
+  }
+  const list = [...tabGroups.value];
+  [list[groupIndex], list[groupIndex + 1]] = [
+    list[groupIndex + 1],
+    list[groupIndex],
+  ];
+  tabGroups.value = list;
+  await saveTabStorage();
+};
+
+const addTabGroup = async () => {
+  const defaultGroupName = 'New Group';
+  const num = tabGroups.value.filter((tabGroup) =>
+    tabGroup.groupName.startsWith(defaultGroupName),
+  ).length;
+  tabGroups.value = [
+    ...tabGroups.value,
+    {
+      tabs: [],
+      groupName: `${defaultGroupName}${num + 1}`,
+      color: '#BDC1C5',
+    },
+  ];
+  await saveTabStorage();
+};
+</script>
+
 <template>
   <div
     class="container"
@@ -6,14 +156,14 @@
   >
     <div class="tab-groups">
       <!-- 1列目 -->
-      <tab-group-view
+      <TabGroupView
         :tabs="tabs"
         @add-tab="addTab"
         @remove-tab="removeTab"
         @tab-sorted="tabSorted"
-      ></tab-group-view>
+      ></TabGroupView>
       <!-- タブグループ -->
-      <tab-group-view
+      <TabGroupView
         v-for="(tabGroup, index) of tabGroups"
         :key="tabGroup.groupName"
         :tabs="tabGroup.tabs"
@@ -29,193 +179,18 @@
         @up-group="upGroup"
         @down-group="downGroup"
       >
-      </tab-group-view>
+      </TabGroupView>
       <button class="add-group-button" @click="addTabGroup">
-        <icon
+        <Icon
           name="addCircleOutline"
           iconColor="rgba(255, 255, 255, 0.72)"
           :size="20"
-        ></icon>
+        ></Icon>
         Add Group
       </button>
     </div>
   </div>
 </template>
-
-<script lang="ts">
-import { defineComponent, onMounted, ref } from 'vue';
-import Icon from '@/components/common/icons/Icon.vue';
-import TabGroupView from '@/components/tab/TabGroup.vue';
-import TabRepository from './repositories/TabRepository';
-import { Tab, TabGroup, TabGroupColor } from './model/Tab';
-
-export default defineComponent({
-  name: 'App',
-  components: {
-    Icon,
-    TabGroupView,
-  },
-  setup() {
-    const undo = (event: Event) => {
-      if (!(event instanceof KeyboardEvent)) {
-        return;
-      }
-      if (event.key !== 'z') {
-        return;
-      }
-    };
-    const redo = (event: Event) => {
-      if (!(event instanceof KeyboardEvent)) {
-        return;
-      }
-      if (event.key !== 'z') {
-        return;
-      }
-    };
-
-    const tabs = ref<Tab[]>([]);
-    const tabGroups = ref<TabGroup[]>([]);
-
-    const fetchTabStorage = async () => {
-      const tabStorage = await TabRepository.fetch();
-      tabs.value = tabStorage?.tabs ?? [];
-      tabGroups.value = tabStorage?.tabGroups ?? [];
-    };
-
-    onMounted(fetchTabStorage);
-
-    const saveTabStorage = async () => {
-      await TabRepository.save({
-        tabs: tabs.value.map((e) => e),
-        tabGroups: tabGroups.value.map((e) => ({
-          ...e,
-          tabs: e.tabs.map((t) => t),
-        })),
-      });
-    };
-
-    const addTab = async (groupIndex: number | null, tab: Tab) => {
-      if (groupIndex === null) {
-        tabs.value = [...tabs.value, tab];
-      } else {
-        tabGroups.value[groupIndex].tabs = [
-          ...tabGroups.value[groupIndex].tabs,
-          tab,
-        ];
-      }
-      await saveTabStorage();
-    };
-
-    const removeTab = async (groupIndex: number | null, url: string) => {
-      if (groupIndex === null) {
-        tabs.value = tabs.value.filter((tab) => tab.url !== url);
-      } else {
-        tabGroups.value[groupIndex].tabs = tabGroups.value[
-          groupIndex
-        ].tabs.filter((tab) => tab.url !== url);
-      }
-      await saveTabStorage();
-    };
-
-    const tabSorted = (groupIndex: number | null, sortedTabs: Tab[]) => {
-      if (groupIndex === null) {
-        tabs.value = sortedTabs;
-      } else {
-        tabGroups.value[groupIndex].tabs = sortedTabs;
-      }
-      saveTabStorage();
-    };
-
-    const changeGroupName = async (
-      groupIndex: number | null,
-      groupName: string,
-    ) => {
-      if (groupIndex === null) {
-        return;
-      }
-      tabGroups.value[groupIndex].groupName = groupName;
-      await saveTabStorage();
-    };
-
-    const changeGroupColor = async (
-      groupIndex: number | null,
-      groupColor: TabGroupColor,
-    ) => {
-      if (groupIndex === null) {
-        return;
-      }
-      tabGroups.value[groupIndex].color = groupColor;
-      await saveTabStorage();
-    };
-
-    const removeGroup = async (groupIndex: number | null) => {
-      if (groupIndex === null) {
-        return;
-      }
-      tabGroups.value.splice(groupIndex, 1);
-      await saveTabStorage();
-    };
-
-    const upGroup = async (groupIndex: number | null) => {
-      if (groupIndex === null || groupIndex === 0) {
-        return;
-      }
-      const list = [...tabGroups.value];
-      [list[groupIndex - 1], list[groupIndex]] = [
-        list[groupIndex],
-        list[groupIndex - 1],
-      ];
-      tabGroups.value = list;
-      await saveTabStorage();
-    };
-
-    const downGroup = async (groupIndex: number | null) => {
-      if (groupIndex === null || groupIndex === tabGroups.value.length - 1) {
-        return;
-      }
-      const list = [...tabGroups.value];
-      [list[groupIndex], list[groupIndex + 1]] = [
-        list[groupIndex + 1],
-        list[groupIndex],
-      ];
-      tabGroups.value = list;
-      await saveTabStorage();
-    };
-
-    const addTabGroup = async () => {
-      const defaultGroupName = 'New Group';
-      const num = tabGroups.value.filter((tabGroup) =>
-        tabGroup.groupName.startsWith(defaultGroupName),
-      ).length;
-      tabGroups.value = [
-        ...tabGroups.value,
-        {
-          tabs: [],
-          groupName: `${defaultGroupName}${num + 1}`,
-          color: '#BDC1C5',
-        },
-      ];
-      await saveTabStorage();
-    };
-
-    return {
-      undo,
-      redo,
-      tabs,
-      tabGroups,
-      addTab,
-      removeTab,
-      tabSorted,
-      changeGroupName,
-      changeGroupColor,
-      removeGroup,
-      upGroup,
-      downGroup,
-      addTabGroup,
-    };
-  },
-});
-</script>
 
 <style lang="scss">
 @import './scss/_variables.scss';
