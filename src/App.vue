@@ -4,23 +4,9 @@ import Icon from '@/components/common/icons/Icon.vue';
 import TabGroupView from '@/components/tab/TabGroup.vue';
 import TabRepository from './repositories/TabRepository';
 import { Tab, TabGroup, TabGroupColor } from './model/Tab';
+import useTabStorageHistory from './composables/tab/useTabStorageHistory';
 
-const undo = (event: Event) => {
-  if (!(event instanceof KeyboardEvent)) {
-    return;
-  }
-  if (event.key !== 'z') {
-    return;
-  }
-};
-const redo = (event: Event) => {
-  if (!(event instanceof KeyboardEvent)) {
-    return;
-  }
-  if (event.key !== 'z') {
-    return;
-  }
-};
+const { undo, redo, updateHistory } = useTabStorageHistory();
 
 const tabs = ref<Tab[]>([]);
 const tabGroups = ref<TabGroup[]>([]);
@@ -30,8 +16,6 @@ const fetchTabStorage = async () => {
   tabs.value = tabStorage?.tabs ?? [];
   tabGroups.value = tabStorage?.tabGroups ?? [];
 };
-
-onMounted(fetchTabStorage);
 
 const saveTabStorage = async () => {
   await TabRepository.save({
@@ -43,6 +27,57 @@ const saveTabStorage = async () => {
   });
 };
 
+onMounted(async () => {
+  await fetchTabStorage();
+  updateHistory({
+    tabs: tabs.value,
+    tabGroups: tabGroups.value,
+  });
+});
+
+const handleUndo = (event: Event) => {
+  if (!(event instanceof KeyboardEvent)) {
+    return;
+  }
+  if (event.key !== 'z') {
+    return;
+  }
+
+  const tabStorage = undo();
+  if (tabStorage === null) {
+    return;
+  }
+  console.log(tabStorage);
+  tabs.value = tabStorage.tabs;
+  tabGroups.value = tabStorage.tabGroups;
+  saveTabStorage();
+};
+
+const handleRedo = (event: Event) => {
+  if (!(event instanceof KeyboardEvent)) {
+    return;
+  }
+  if (event.key !== 'z') {
+    return;
+  }
+
+  const tabStorage = redo();
+  if (tabStorage === null) {
+    return;
+  }
+  tabs.value = tabStorage.tabs;
+  tabGroups.value = tabStorage.tabGroups;
+  saveTabStorage();
+};
+
+const updateTabStorage = async () => {
+  updateHistory({
+    tabs: tabs.value,
+    tabGroups: tabGroups.value,
+  });
+  saveTabStorage();
+};
+
 const addTab = async (groupIndex: number | null, tab: Tab) => {
   if (groupIndex === null) {
     tabs.value = [...tabs.value, tab];
@@ -52,7 +87,7 @@ const addTab = async (groupIndex: number | null, tab: Tab) => {
       tab,
     ];
   }
-  await saveTabStorage();
+  await updateTabStorage();
 };
 
 const removeTab = async (groupIndex: number | null, url: string) => {
@@ -63,16 +98,26 @@ const removeTab = async (groupIndex: number | null, url: string) => {
       (tab) => tab.url !== url,
     );
   }
-  await saveTabStorage();
+  await updateTabStorage();
 };
 
 const tabSorted = (groupIndex: number | null, sortedTabs: Tab[]) => {
   if (groupIndex === null) {
+    if (tabs.value.every((oldTab, index) => oldTab === sortedTabs[index])) {
+      return;
+    }
     tabs.value = sortedTabs;
   } else {
+    if (
+      tabGroups.value[groupIndex].tabs.every(
+        (oldTab, index) => oldTab === sortedTabs[index],
+      )
+    ) {
+      return;
+    }
     tabGroups.value[groupIndex].tabs = sortedTabs;
   }
-  saveTabStorage();
+  updateTabStorage();
 };
 
 const changeGroupName = async (
@@ -83,7 +128,7 @@ const changeGroupName = async (
     return;
   }
   tabGroups.value[groupIndex].groupName = groupName;
-  await saveTabStorage();
+  await updateTabStorage();
 };
 
 const changeGroupColor = async (
@@ -94,7 +139,7 @@ const changeGroupColor = async (
     return;
   }
   tabGroups.value[groupIndex].color = groupColor;
-  await saveTabStorage();
+  await updateTabStorage();
 };
 
 const removeGroup = async (groupIndex: number | null) => {
@@ -102,7 +147,7 @@ const removeGroup = async (groupIndex: number | null) => {
     return;
   }
   tabGroups.value.splice(groupIndex, 1);
-  await saveTabStorage();
+  await updateTabStorage();
 };
 
 const upGroup = async (groupIndex: number | null) => {
@@ -115,7 +160,7 @@ const upGroup = async (groupIndex: number | null) => {
     list[groupIndex - 1],
   ];
   tabGroups.value = list;
-  await saveTabStorage();
+  await updateTabStorage();
 };
 
 const downGroup = async (groupIndex: number | null) => {
@@ -128,7 +173,7 @@ const downGroup = async (groupIndex: number | null) => {
     list[groupIndex],
   ];
   tabGroups.value = list;
-  await saveTabStorage();
+  await updateTabStorage();
 };
 
 const addTabGroup = async () => {
@@ -144,15 +189,16 @@ const addTabGroup = async () => {
       color: '#BDC1C5',
     },
   ];
-  await saveTabStorage();
+  await updateTabStorage();
 };
 </script>
 
 <template>
   <div
     class="container"
-    @keydown.meta.exact="undo"
-    @keydown.meta.shift.exact="redo"
+    @keydown.exact="handleUndo"
+    @keydown.meta.exact="handleUndo"
+    @keydown.meta.shift.exact="handleRedo"
   >
     <div class="tab-groups">
       <!-- 1列目 -->
