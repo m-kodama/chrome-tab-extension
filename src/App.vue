@@ -1,31 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted } from 'vue';
 import Icon from '@/components/common/icons/Icon.vue';
 import TabGroupView from '@/components/tab/TabGroup.vue';
-import TabRepository from './repositories/TabRepository';
-import { Tab, TabGroup, TabGroupColor } from './model/Tab';
+import { Tab, TabGroupColor } from './model/Tab';
 import useTabStorageHistory from './composables/tab/useTabStorageHistory';
+import useTabStorage from './composables/tab/useTabStorage';
+
+const { tabs, tabGroups, fetchTabStorage, saveTabStorage } = useTabStorage();
 
 const { undo, redo, updateHistory } = useTabStorageHistory();
-
-const tabs = ref<Tab[]>([]);
-const tabGroups = ref<TabGroup[]>([]);
-
-const fetchTabStorage = async () => {
-  const tabStorage = await TabRepository.fetch();
-  tabs.value = tabStorage?.tabs ?? [];
-  tabGroups.value = tabStorage?.tabGroups ?? [];
-};
-
-const saveTabStorage = async () => {
-  await TabRepository.save({
-    tabs: tabs.value.map((e) => e),
-    tabGroups: tabGroups.value.map((e) => ({
-      ...e,
-      tabs: e.tabs.map((t) => t),
-    })),
-  });
-};
 
 onMounted(async () => {
   await fetchTabStorage();
@@ -75,7 +58,7 @@ const updateTabStorage = async () => {
     tabs: tabs.value,
     tabGroups: tabGroups.value,
   });
-  saveTabStorage();
+  await saveTabStorage();
 };
 
 const addTab = async (groupIndex: number | null, tab: Tab) => {
