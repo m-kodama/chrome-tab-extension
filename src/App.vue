@@ -27,10 +27,10 @@ const handleUndo = (event: Event) => {
   }
 
   const tabStorage = undo();
+  console.log(tabStorage);
   if (tabStorage === null) {
     return;
   }
-  console.log(tabStorage);
   tabs.value = tabStorage.tabs;
   tabGroups.value = tabStorage.tabGroups;
   saveTabStorage();
@@ -179,7 +179,6 @@ const addTabGroup = async () => {
 <template>
   <div
     class="container"
-    @keydown.exact="handleUndo"
     @keydown.meta.exact="handleUndo"
     @keydown.meta.shift.exact="handleRedo"
   >

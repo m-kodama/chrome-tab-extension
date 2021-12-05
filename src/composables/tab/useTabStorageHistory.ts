@@ -15,21 +15,32 @@ export default function useTabStorageHistory(options?: {
     if (index === -1) {
       return null;
     }
-    return history[--index];
+    index--;
+    if (index === -1) {
+      return null;
+    }
+    return history[index];
   };
 
   const redo = (): TabStorage | null => {
-    if (index === history.length - 1) {
+    if (index >= history.length - 1) {
       return null;
     }
-    return history[++index];
+    index++;
+    return history[index];
   };
 
   const updateHistory = (recent: TabStorage) => {
     // 現在のインデックスより後の要素を削除
     history.splice(index + 1);
     // 末尾に要素を追加しインデックスを更新
-    history.push(recent);
+    history.push({
+      tabs: recent.tabs.map((e) => ({ ...e })),
+      tabGroups: recent.tabGroups.map((e) => ({
+        ...e,
+        tabs: e.tabs.map((t) => ({ ...t })),
+      })),
+    });
     index++;
     // 履歴の最大を超えた場合は先頭を削除しインデックスを調整
     if (history.length > max) {
