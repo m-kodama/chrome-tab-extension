@@ -1,19 +1,5 @@
-<template>
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    :width="size"
-    :height="size"
-    viewBox="0 0 24 24"
-    :aria-labelledby="name"
-    role="presentation"
-  >
-    <title :id="name" lang="ja">{{ name }} icon</title>
-    <g :fill="iconColor" v-html="path" />
-  </svg>
-</template>
-
-<script lang="ts">
-import { computed, defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { computed, defineProps, withDefaults } from 'vue';
 
 // 軽量化を目指すため利用するアイコンのPathのみ定数化する
 const svgPath = {
@@ -40,30 +26,31 @@ const svgPath = {
 
 export type IconName = keyof typeof svgPath;
 
-export default defineComponent({
-  name: 'Icon',
-  props: {
-    name: {
-      type: String as PropType<IconName>,
-      required: true,
-    },
-    size: {
-      type: Number,
-      default: 24,
-    },
-    iconColor: {
-      type: String,
-      default: '#FFFFFF',
-    },
-  },
-  setup(props) {
-    const path = computed(() => svgPath[props.name]);
-
-    return {
-      path,
-    };
-  },
+interface Props {
+  name: IconName;
+  size: number;
+  iconColor: string;
+}
+const props = withDefaults(defineProps<Props>(), {
+  size: 24,
+  iconColor: '#FFFFFF',
 });
+
+const path = computed(() => svgPath[props.name]);
 </script>
+
+<template>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    :width="size"
+    :height="size"
+    viewBox="0 0 24 24"
+    :aria-labelledby="name"
+    role="presentation"
+  >
+    <title :id="name" lang="ja">{{ name }} icon</title>
+    <g :fill="iconColor" v-html="path" />
+  </svg>
+</template>
 
 <style scoped lang="scss"></style>

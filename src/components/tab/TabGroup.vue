@@ -277,12 +277,12 @@ const downGroup = () => emit('downGroup', props.groupIndex);
       >
         <div class="tab-group-tag-title">{{ currentName }}</div>
       </div>
-      <icon-button
+      <IconButton
         class="tab-add"
         iconName="add"
         @click="addTab"
         :autofocus="groupIndex === null"
-      ></icon-button>
+      ></IconButton>
       <div class="tabs">
         <div
           v-for="(tab, i) of displayTabs"
@@ -306,13 +306,13 @@ const downGroup = () => emit('downGroup', props.groupIndex);
             }"
           ></div>
           <div class="tab-title">{{ tab.tab.title }}</div>
-          <icon-button
+          <IconButton
             class="tab-close"
             iconName="clear"
             size="small"
             :tabIndex="-1"
-            @click.native.stop="removeTab(tab.tab.url)"
-          ></icon-button>
+            @click.stop="removeTab(tab.tab.url)"
+          ></IconButton>
         </div>
       </div>
     </div>
@@ -333,22 +333,22 @@ const downGroup = () => emit('downGroup', props.groupIndex);
           :key="color"
           @click="changeGroupColor(color)"
         >
-          <icon
+          <Icon
             v-if="color === currentColor"
             name="radioButtonChecked"
             :iconColor="color"
             :size="20"
           />
-          <icon v-else name="circle" :iconColor="color" :size="16" />
+          <Icon v-else name="circle" :iconColor="color" :size="16" />
         </div>
       </div>
       <div class="vertical-divider"></div>
       <button class="tab-group-menu-button" @click="upGroup">
-        <icon
+        <Icon
           name="arrowUpward"
           iconColor="rgba(255, 255, 255, 0.72)"
           :size="20"
-        ></icon>
+        />
         Up
       </button>
       <button class="tab-group-menu-button" @click="downGroup">
@@ -362,11 +362,11 @@ const downGroup = () => emit('downGroup', props.groupIndex);
       <div style="flex: 1 1 0"></div>
       <div class="vertical-divider"></div>
       <button class="tab-group-menu-button" @click="removeGroup">
-        <icon
+        <Icon
           name="deleteOutline"
           iconColor="rgba(255, 255, 255, 0.72)"
           :size="20"
-        ></icon>
+        />
         Delete Group
       </button>
     </div>

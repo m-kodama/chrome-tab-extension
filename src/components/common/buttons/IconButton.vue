@@ -1,18 +1,5 @@
-<template>
-  <button
-    class="icon-button"
-    @click="$emit('click')"
-    type="button"
-    :autofocus="autofocus"
-    :style="style"
-    :tabIndex="tabIndex"
-  >
-    <icon :name="iconName" :iconColor="iconColor" :size="iconSize" />
-  </button>
-</template>
-
-<script lang="ts">
-import { computed, defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { computed, defineProps, withDefaults, defineEmits } from 'vue';
 import Icon, { IconName } from '@/components/common/icons/Icon.vue';
 
 const buttonSize = {
@@ -32,48 +19,51 @@ const buttonSize = {
 
 type ButtonSize = keyof typeof buttonSize;
 
-export default defineComponent({
-  name: 'IconButton',
-  components: {
-    Icon,
-  },
-  props: {
-    size: {
-      type: String as PropType<ButtonSize>,
-      default: 'medium',
-    },
-    autofocus: {
-      type: Boolean,
-      default: false,
-    },
-    tabIndex: {
-      type: Number as PropType<number>,
-      default: 9999,
-    },
-    iconName: {
-      type: String as PropType<IconName>,
-      required: true,
-    },
-    iconColor: {
-      type: String,
-      default: 'rgba(255, 255, 255, 0.72)',
-    },
-  },
-  setup(props) {
-    const style = computed(() => ({
-      width: `${buttonSize[props.size].button}px`,
-      height: `${buttonSize[props.size].button}px`,
-    }));
+interface Props {
+  size: ButtonSize;
+  autofocus: boolean;
+  tabIndex: number;
+  iconName: IconName;
+  iconColor: string;
+}
 
-    const iconSize = computed(() => buttonSize[props.size].icon);
-
-    return {
-      style,
-      iconSize,
-    };
-  },
+const props = withDefaults(defineProps<Props>(), {
+  size: 'medium',
+  autofocus: false,
+  tabIndex: 9999,
+  iconColor: 'rgba(255, 255, 255, 0.72)',
 });
+
+interface Emits {
+  (e: 'click', event: Event): void;
+}
+
+const emit = defineEmits<Emits>();
+
+const style = computed(() => ({
+  width: `${buttonSize[props.size].button}px`,
+  height: `${buttonSize[props.size].button}px`,
+}));
+
+const iconSize = computed(() => buttonSize[props.size].icon);
+
+const handleClick = (event: Event) => {
+  emit('click', event);
+};
 </script>
+
+<template>
+  <button
+    class="icon-button"
+    @click="handleClick"
+    type="button"
+    :autofocus="autofocus"
+    :style="style"
+    :tabIndex="tabIndex"
+  >
+    <Icon :name="iconName" :iconColor="iconColor" :size="iconSize" />
+  </button>
+</template>
 
 <style scoped lang="scss">
 .icon-button {
