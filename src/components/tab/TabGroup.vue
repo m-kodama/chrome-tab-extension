@@ -1,3 +1,269 @@
+<script setup lang="ts">
+import {
+  computed,
+  nextTick,
+  onBeforeUpdate,
+  ref,
+  watch,
+  defineProps,
+  withDefaults,
+  defineEmits,
+} from 'vue';
+import * as RuntimeCore from '@vue/runtime-core';
+import Icon from '@/components/common/icons/Icon.vue';
+import IconButton from '@/components/common/buttons/IconButton.vue';
+import { Tab, TabGroupColor, tabGroupColors } from '../.././model/Tab';
+import TabsHelper from '@/helper/TabsHelper';
+
+// 画面表示用のタブクラス
+interface DisplayTab {
+  isHighlight: boolean;
+  tab: Tab;
+}
+
+type TemplateRef = Element | RuntimeCore.ComponentPublicInstance;
+
+interface Props {
+  tabs: Tab[];
+  groupName: string | null;
+  groupColor: TabGroupColor | null;
+  groupIndex: number | null;
+}
+const props = withDefaults(defineProps<Props>(), {
+  tabs: () => [],
+  groupName: () => null,
+  groupColor: () => null,
+  groupIndex: () => null,
+});
+
+interface Emits {
+  (e: 'addTab', groupIndex: number | null, tab: Tab): void;
+  (e: 'removeTab', groupIndex: number | null, url: string): void;
+  (e: 'tabSorted', groupIndex: number | null, sortedTabs: Tab[]): void;
+  (e: 'removeGroup', groupIndex: number | null): void;
+  (e: 'changeGroupName', groupIndex: number | null, groupName: string): void;
+  (
+    e: 'changeGroupColor',
+    groupIndex: number | null,
+    groupColor: TabGroupColor,
+  ): void;
+  (e: 'upGroup', groupIndex: number | null): void;
+  (e: 'downGroup', groupIndex: number | null): void;
+}
+const emit = defineEmits<Emits>();
+
+// タブを表示用のデータに変換
+const displayTabs = ref<DisplayTab[]>(
+  props.tabs.map((tab) => ({
+    isHighlight: false,
+    tab,
+  })),
+);
+
+watch(
+  () => props.tabs,
+  (newValue) => {
+    displayTabs.value = newValue.map((tab) => ({
+      isHighlight: false,
+      tab,
+    }));
+  },
+);
+
+const addTab = async () => {
+  const currentTab = await TabsHelper.getCurrentTab();
+  const { url } = currentTab;
+  if (url === undefined) {
+    return;
+  }
+
+  // すでに追加されているタブの場合は追加せず1秒だけハイライトする
+  const sameTab = displayTabs.value.find(({ tab }) => tab.url === url);
+  if (sameTab !== undefined) {
+    sameTab.isHighlight = true;
+    new Promise((resolve) => setTimeout(resolve, 1000)).then(() => {
+      sameTab.isHighlight = false;
+    });
+    return;
+  }
+  emit('addTab', props.groupIndex, {
+    url: url,
+    title: currentTab.title ?? '',
+    favIconUrl: currentTab.favIconUrl ?? '',
+  });
+};
+
+const removeTab = (url: string) => emit('removeTab', props.groupIndex, url);
+
+const onTabClick = async (tab: Tab) => {
+  // 現在のwindowでそのタブを開いている場合はそのタブを表示する
+  const tabs = await TabsHelper.findByUrl(tab.url);
+  if (tabs.length !== 0) {
+    await TabsHelper.toActive(tabs[0].index);
+    return;
+  }
+  await TabsHelper.create(tab.url);
+};
+
+const onTabMetaClick = async (tab: Tab) => {
+  await TabsHelper.create(tab.url, false);
+};
+
+// タブのソート機能
+let pointerPositionX: number | null = null;
+let draggingElement: HTMLElement | null = null;
+let mouseMoved = false;
+const tabElements = ref<TemplateRef[]>([]);
+onBeforeUpdate(() => {
+  tabElements.value = [];
+});
+
+const onMouseDown = (event: Event) => {
+  if (!(event instanceof MouseEvent)) {
+    return;
+  }
+  const element = event.currentTarget;
+  if (!(element instanceof HTMLElement)) {
+    return;
+  }
+  pointerPositionX = event.clientX;
+  draggingElement = element;
+  draggingElement.style.cursor = 'grabbing';
+  mouseMoved = false;
+
+  window.addEventListener('mouseup', onMouseUp);
+  window.addEventListener('mousemove', onMouseMove);
+};
+
+const onMouseMove = (event: Event) => {
+  if (!(event instanceof MouseEvent)) {
+    return;
+  }
+  if (pointerPositionX === null || draggingElement === null) {
+    return;
+  }
+  mouseMoved = true;
+
+  // タブ(DOM)を移動
+  const movementX = event.clientX - pointerPositionX;
+  draggingElement.style.zIndex = '5';
+  draggingElement.style.transform = `translateX(${movementX}px)`;
+
+  // タブの重なり判定
+  const draggingElementIndex = Number(draggingElement.dataset['index']);
+  const draggingRect = draggingElement.getBoundingClientRect();
+  for (let i = 0; i < tabElements.value.length; i++) {
+    const element = tabElements.value[i];
+    if (!(element instanceof Element)) {
+      continue;
+    }
+    const rect = element.getBoundingClientRect();
+    const reactWidth = rect.right - rect.left;
+    const rectCenter = rect.left + reactWidth / 2;
+
+    // 前のタブとの入れ替え判定
+    const shouldSwapBefore =
+      i < draggingElementIndex && draggingRect.left < rectCenter;
+    if (shouldSwapBefore) {
+      const list = [...displayTabs.value];
+      [list[draggingElementIndex - 1], list[draggingElementIndex]] = [
+        list[draggingElementIndex],
+        list[draggingElementIndex - 1],
+      ];
+      displayTabs.value = list;
+      pointerPositionX -= reactWidth;
+      draggingElement.style.transform = `translateX(${
+        movementX + reactWidth
+      }px)`;
+    }
+
+    // 後ろのタブとの入れ替え判定
+    const shouldSwapAfter =
+      draggingElementIndex < i && rectCenter < draggingRect.right;
+    if (shouldSwapAfter) {
+      const list = [...displayTabs.value];
+      [list[draggingElementIndex + 1], list[draggingElementIndex]] = [
+        list[draggingElementIndex],
+        list[draggingElementIndex + 1],
+      ];
+      displayTabs.value = list;
+      pointerPositionX += reactWidth;
+      draggingElement.style.transform = `translateX(${
+        movementX - reactWidth
+      }px)`;
+    }
+  }
+};
+
+const onMouseUp = (event: Event) => {
+  if (!(event instanceof MouseEvent)) {
+    return;
+  }
+  if (pointerPositionX === null || draggingElement === null) {
+    return;
+  }
+  draggingElement.style.cursor = 'pointer';
+  draggingElement.style.zIndex = '1';
+  draggingElement.style.transform = '';
+  pointerPositionX = null;
+  draggingElement = null;
+
+  window.removeEventListener('mouseup', onMouseUp);
+  window.removeEventListener('mousemove', onMouseMove);
+
+  // ドラッグされなかった場合ここで処理終了
+  if (!mouseMoved) {
+    return;
+  }
+
+  // タブのクリックイベントを発生させないようにする
+  window.addEventListener('click', (event: Event) => event.stopPropagation(), {
+    capture: true,
+    once: true,
+  });
+
+  emit(
+    'tabSorted',
+    props.groupIndex,
+    displayTabs.value.map((e) => e.tab),
+  );
+};
+
+const groupNameInput = ref<HTMLInputElement>();
+const isShowMenu = ref<boolean>(false);
+const showMenu = async () => {
+  isShowMenu.value = true;
+  nextTick(() => {
+    groupNameInput.value?.focus();
+  });
+};
+const hideMenu = () => {
+  isShowMenu.value = false;
+};
+
+const groupColors = computed(() => tabGroupColors);
+const currentName = ref(props.groupName);
+const currentColor = ref(props.groupColor);
+const changeGroupName = (event: Event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) {
+    return;
+  }
+  emit('changeGroupName', props.groupIndex, target.value);
+};
+const changeGroupColor = (color: TabGroupColor) => {
+  if (color === currentColor.value) {
+    return;
+  }
+  emit('changeGroupColor', props.groupIndex, color);
+  currentColor.value = color;
+};
+const removeGroup = () => emit('removeGroup', props.groupIndex);
+
+const upGroup = () => emit('upGroup', props.groupIndex);
+const downGroup = () => emit('downGroup', props.groupIndex);
+</script>
+
 <template>
   <div class="tab-group">
     <div class="tab-group-content">
@@ -106,312 +372,6 @@
     </div>
   </div>
 </template>
-
-<script lang="ts">
-import {
-  computed,
-  defineComponent,
-  nextTick,
-  onBeforeUpdate,
-  PropType,
-  ref,
-  watch,
-} from 'vue';
-import * as RuntimeCore from '@vue/runtime-core';
-import Icon from '@/components/common/icons/Icon.vue';
-import IconButton from '@/components/common/buttons/IconButton.vue';
-import { Tab, TabGroupColor, tabGroupColors } from '../.././model/Tab';
-import TabsHelper from '@/helper/TabsHelper';
-
-// 画面表示用のタブクラス
-interface DisplayTab {
-  isHighlight: boolean;
-  tab: Tab;
-}
-
-type TemplateRef = Element | RuntimeCore.ComponentPublicInstance;
-
-export default defineComponent({
-  name: 'App',
-  components: {
-    Icon,
-    IconButton,
-  },
-  props: {
-    tabs: {
-      type: Object as PropType<Tab[]>,
-      required: true,
-    },
-    groupName: {
-      type: String as PropType<string | null>,
-      default: null,
-    },
-    groupColor: {
-      type: String as PropType<TabGroupColor | null>,
-      default: null,
-    },
-    groupIndex: {
-      type: Number as PropType<number | null>,
-      default: null,
-    },
-  },
-  emits: {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    addTab: (groupIndex: number | null, tab: Tab) => true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    removeTab: (groupIndex: number | null, url: string) => true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    tabSorted: (groupIndex: number | null, sortedTabs: Tab[]) => true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    removeGroup: (groupIndex: number | null) => true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    changeGroupName: (groupIndex: number | null, groupName: string) => true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    changeGroupColor: (groupIndex: number | null, groupColor: TabGroupColor) =>
-      true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    upGroup: (groupIndex: number | null) => true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    downGroup: (groupIndex: number | null) => true,
-  },
-  setup(props, { emit }) {
-    // タブを表示用のデータに変換
-    const displayTabs = ref<DisplayTab[]>(
-      props.tabs.map((tab) => ({
-        isHighlight: false,
-        tab,
-      })),
-    );
-    watch(
-      () => props.tabs,
-      (newValue, oldValue) => {
-        if (newValue === oldValue) {
-          return;
-        }
-        displayTabs.value = newValue.map((tab) => ({
-          isHighlight: false,
-          tab,
-        }));
-      },
-    );
-
-    const addTab = async () => {
-      const currentTab = await TabsHelper.getCurrentTab();
-      const { url } = currentTab;
-      if (url === undefined) {
-        return;
-      }
-
-      // すでに追加されているタブの場合は追加せず1秒だけハイライトする
-      const sameTab = displayTabs.value.find(({ tab }) => tab.url === url);
-      if (sameTab !== undefined) {
-        sameTab.isHighlight = true;
-        new Promise((resolve) => setTimeout(resolve, 1000)).then(() => {
-          sameTab.isHighlight = false;
-        });
-        return;
-      }
-      emit('addTab', props.groupIndex, {
-        url: url,
-        title: currentTab.title ?? '',
-        favIconUrl: currentTab.favIconUrl ?? '',
-      });
-    };
-    const removeTab = (url: string) => emit('removeTab', props.groupIndex, url);
-
-    const onTabClick = async (tab: Tab) => {
-      // 現在のwindowでそのタブを開いている場合はそのタブを表示する
-      const tabs = await TabsHelper.findByUrl(tab.url);
-      if (tabs.length !== 0) {
-        await TabsHelper.toActive(tabs[0].index);
-        return;
-      }
-      await TabsHelper.create(tab.url);
-    };
-
-    const onTabMetaClick = async (tab: Tab) => {
-      await TabsHelper.create(tab.url, false);
-    };
-
-    // タブのソート機能
-    let pointerPositionX: number | null = null;
-    let draggingElement: HTMLElement | null = null;
-    let mouseMoved = false;
-    const tabElements = ref<TemplateRef[]>([]);
-    onBeforeUpdate(() => {
-      tabElements.value = [];
-    });
-
-    const onMouseDown = (event: Event) => {
-      if (!(event instanceof MouseEvent)) {
-        return;
-      }
-      const element = event.currentTarget;
-      if (!(element instanceof HTMLElement)) {
-        return;
-      }
-      pointerPositionX = event.clientX;
-      draggingElement = element;
-      draggingElement.style.cursor = 'grabbing';
-      mouseMoved = false;
-
-      window.addEventListener('mouseup', onMouseUp);
-      window.addEventListener('mousemove', onMouseMove);
-    };
-
-    const onMouseMove = (event: Event) => {
-      if (!(event instanceof MouseEvent)) {
-        return;
-      }
-      if (pointerPositionX === null || draggingElement === null) {
-        return;
-      }
-      mouseMoved = true;
-
-      // タブ(DOM)を移動
-      const movementX = event.clientX - pointerPositionX;
-      draggingElement.style.zIndex = '5';
-      draggingElement.style.transform = `translateX(${movementX}px)`;
-
-      // タブの重なり判定
-      const draggingElementIndex = Number(draggingElement.dataset['index']);
-      const draggingRect = draggingElement.getBoundingClientRect();
-      for (let i = 0; i < tabElements.value.length; i++) {
-        const element = tabElements.value[i];
-        if (!(element instanceof Element)) {
-          continue;
-        }
-        const rect = element.getBoundingClientRect();
-        const reactWidth = rect.right - rect.left;
-        const rectCenter = rect.left + reactWidth / 2;
-
-        // 前のタブとの入れ替え判定
-        const shouldSwapBefore =
-          i < draggingElementIndex && draggingRect.left < rectCenter;
-        if (shouldSwapBefore) {
-          const list = [...displayTabs.value];
-          [list[draggingElementIndex - 1], list[draggingElementIndex]] = [
-            list[draggingElementIndex],
-            list[draggingElementIndex - 1],
-          ];
-          displayTabs.value = list;
-          pointerPositionX -= reactWidth;
-          draggingElement.style.transform = `translateX(${
-            movementX + reactWidth
-          }px)`;
-        }
-
-        // 後ろのタブとの入れ替え判定
-        const shouldSwapAfter =
-          draggingElementIndex < i && rectCenter < draggingRect.right;
-        if (shouldSwapAfter) {
-          const list = [...displayTabs.value];
-          [list[draggingElementIndex + 1], list[draggingElementIndex]] = [
-            list[draggingElementIndex],
-            list[draggingElementIndex + 1],
-          ];
-          displayTabs.value = list;
-          pointerPositionX += reactWidth;
-          draggingElement.style.transform = `translateX(${
-            movementX - reactWidth
-          }px)`;
-        }
-      }
-    };
-
-    const onMouseUp = (event: Event) => {
-      if (!(event instanceof MouseEvent)) {
-        return;
-      }
-      if (pointerPositionX === null || draggingElement === null) {
-        return;
-      }
-      draggingElement.style.cursor = 'pointer';
-      draggingElement.style.zIndex = '1';
-      draggingElement.style.transform = '';
-      pointerPositionX = null;
-      draggingElement = null;
-
-      window.removeEventListener('mouseup', onMouseUp);
-      window.removeEventListener('mousemove', onMouseMove);
-
-      // ドラッグされなかった場合ここで処理終了
-      if (!mouseMoved) {
-        return;
-      }
-
-      // タブのクリックイベントを発生させないようにする
-      window.addEventListener(
-        'click',
-        (event: Event) => event.stopPropagation(),
-        { capture: true, once: true },
-      );
-
-      emit(
-        'tabSorted',
-        props.groupIndex,
-        displayTabs.value.map((e) => e.tab),
-      );
-    };
-
-    const groupNameInput = ref<HTMLInputElement>();
-    const isShowMenu = ref<boolean>(false);
-    const showMenu = async () => {
-      isShowMenu.value = true;
-      nextTick(() => {
-        groupNameInput.value?.focus();
-      });
-    };
-    const hideMenu = () => {
-      isShowMenu.value = false;
-    };
-
-    const groupColors = computed(() => tabGroupColors);
-    const currentName = ref(props.groupName);
-    const currentColor = ref(props.groupColor);
-    const changeGroupName = (event: Event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement)) {
-        return;
-      }
-      emit('changeGroupName', props.groupIndex, target.value);
-    };
-    const changeGroupColor = (color: TabGroupColor) => {
-      if (color === currentColor.value) {
-        return;
-      }
-      emit('changeGroupColor', props.groupIndex, color);
-      currentColor.value = color;
-    };
-    const removeGroup = () => emit('removeGroup', props.groupIndex);
-
-    const upGroup = () => emit('upGroup', props.groupIndex);
-    const downGroup = () => emit('downGroup', props.groupIndex);
-
-    return {
-      displayTabs,
-      tabElements,
-      addTab,
-      removeTab,
-      onTabClick,
-      onTabMetaClick,
-      onMouseDown,
-      groupNameInput,
-      isShowMenu,
-      showMenu,
-      hideMenu,
-      groupColors,
-      currentName,
-      currentColor,
-      changeGroupName,
-      changeGroupColor,
-      removeGroup,
-      upGroup,
-      downGroup,
-    };
-  },
-});
-</script>
 
 <style lang="scss" scoped>
 @import '../../scss/_variables.scss';
